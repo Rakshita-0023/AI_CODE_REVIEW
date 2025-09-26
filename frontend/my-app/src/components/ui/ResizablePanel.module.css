@@ -1,0 +1,149 @@
+.resizablePanel {
+  position: relative;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-light);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.resizablePanel:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.resizeHandle {
+  position: absolute;
+  background: transparent;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.resizeHandle:hover {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+.resizeHandle:active {
+  background: rgba(139, 92, 246, 0.3);
+}
+
+.resizeRight {
+  top: 0;
+  right: -2px;
+  width: 4px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.resizeBottom {
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  cursor: ns-resize;
+}
+
+.resizeCorner {
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  cursor: nw-resize;
+  border-radius: 0 0 1rem 0;
+}
+
+.resizeCorner::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(
+    -45deg,
+    transparent 30%,
+    rgba(139, 92, 246, 0.3) 30%,
+    rgba(139, 92, 246, 0.3) 35%,
+    transparent 35%,
+    transparent 65%,
+    rgba(139, 92, 246, 0.3) 65%,
+    rgba(139, 92, 246, 0.3) 70%,
+    transparent 70%
+  );
+  border-radius: 0 0 0.5rem 0;
+}
+
+.resizeOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: transparent;
+  cursor: inherit;
+}
+
+/* Hover effects for better UX */
+.resizablePanel:hover .resizeRight,
+.resizablePanel:hover .resizeBottom {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.resizablePanel:hover .resizeCorner::after {
+  background: linear-gradient(
+    -45deg,
+    transparent 30%,
+    rgba(139, 92, 246, 0.5) 30%,
+    rgba(139, 92, 246, 0.5) 35%,
+    transparent 35%,
+    transparent 65%,
+    rgba(139, 92, 246, 0.5) 65%,
+    rgba(139, 92, 246, 0.5) 70%,
+    transparent 70%
+  );
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .resizeHandle:hover {
+  background: rgba(139, 92, 246, 0.3);
+}
+
+[data-theme="dark"] .resizeHandle:active {
+  background: rgba(139, 92, 246, 0.4);
+}
+
+[data-theme="dark"] .resizablePanel:hover .resizeRight,
+[data-theme="dark"] .resizablePanel:hover .resizeBottom {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+/* Smooth transitions */
+.resizablePanel {
+  transition: width 0.1s ease-out, height 0.1s ease-out;
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .resizeRight,
+  .resizeBottom,
+  .resizeCorner {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .resizablePanel {
+    width: 100% !important;
+    height: auto !important;
+    min-width: auto !important;
+    min-height: auto !important;
+  }
+}

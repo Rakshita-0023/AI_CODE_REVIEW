@@ -1,0 +1,348 @@
+Database connected successfully
+Database synchronized
+Server running on port 3001
+Environment: development
+Language: input='javascript' -> detected='javascript'
+
+=== AI ANALYSIS START ===
+Type: review
+Language: javascript
+Code: // Sample data
+const customers = [
+  { customer_id: 1, name: "Alice", city: "Delhi" },
+  { customer_id: 2, name: "Bob", city: "Mumbai" },
+  { customer_id: 3, name: "Charlie", city: "Bangalore" }
+];
+
+const orders = [
+  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },
+  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },
+  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }
+];
+
+// Find customers with at least one order
+const customersWithOrders = customers.filter(c =>
+  orders.some(o => o.customer_id === c.customer_id)
+);
+
+// Print results
+customersWithOrders.forEach(c => {
+  console.log(`Customer: ${c.name} (${c.city})`);
+  orders
+    .filter(o => o.customer_id === c.customer_id)
+    .forEach(o => {
+      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);
+    });
+});
+
+API Key exists: true
+Prompt: You are a code analysis expert. Analyze this javascript code:
+
+```javascript
+// Sample data
+const customers = [
+  { customer_id: 1, name: "Alice", city: "Delhi" },
+  { customer_id: 2, name: "Bob", city: "Mumbai" },
+  { customer_id: 3, name: "Charlie", city: "Bangalore" }
+];
+
+const orders = [
+  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },
+  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },
+  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }
+];
+
+// Find customers with at least one order
+const customersWithOrders = customers.filter(c =>
+  orders.some(o => o.customer_id === c.customer_id)
+);
+
+// Print results
+customersWithOrders.forEach(c => {
+  console.log(`Customer: ${c.name} (${c.city})`);
+  orders
+    .filter(o => o.customer_id === c.customer_id)
+    .forEach(o => {
+      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);
+    });
+});
+
+```
+
+You are a strict code reviewer. Analyze this code thoroughly and find ALL issues:
+
+1. SYNTAX ERRORS: Missing semicolons, brackets, quotes, etc.
+2. LOGIC ERRORS: Infinite loops, wrong conditions, unreachable code
+3. RUNTIME ERRORS: Undefined variables, null references, type errors
+4. BEST PRACTICES: Poor naming, missing error handling, code smells
+5. SECURITY ISSUES: Injection vulnerabilities, unsafe operations
+
+Be critical! Even simple code can have issues. Rate harshly if problems exist.
+
+If code has ANY errors or issues, score should be 60 or below.
+If code is perfect, score can be 80-95.
+
+Return ONLY this JSON (no markdown, no extra text):
+{
+  "qualityScore": 45,
+  "issues": [
+    {"line": 1, "severity": "high", "message": "Specific issue found", "suggestion": "Specific fix needed"}
+  ],
+  "summary": "Detailed summary of all problems found"
+}
+Calling Gemini AI...
+Raw AI Response: ```json
+{
+  "qualityScore": 60,
+  "issues": [
+    {
+      "line": 18,
+      "severity": "medium",
+      "message": "Inefficient nested loop",
+      "suggestion": "Use a Map or object to improve lookup time from O(n^2) to O(n). Create a map of customer_id to orders to avoid nested iteration."
+    },
+    {
+      "line": 20,
+      "severity": "low",
+      "message": "Poor variable name",
+      "suggestion": "Use more descriptive variable names like `customersWithOrders` instead of `customersWithOrders` (Although this is already used, better descriptive naming should be used throughout)"
+    },
+    {
+      "line": 27,
+      "severity": "low",
+      "message": "Missing error handling",
+      "suggestion": "Consider adding error handling for cases where the data might be malformed or missing (e.g., missing `customer_id` in orders)."
+    },
+    {
+      "line": 20,
+      "severity": "low",
+      "message": "Could use template literals for better readability in the console output",
+      "suggestion": "Use template literals for clearer formatting and improved readability (This is already being done, but better consistency could be applied)."
+    },
+    {
+      "line": 1,
+      "severity": "low",
+      "message": "Lack of comments explaining the purpose of the code",
+      "suggestion": "Add comments to explain the purpose of each section of code and the logic behind the operations. This will make the code more understandable and maintainable."
+    }
+  ],
+  "summary": "The code functions correctly but has inefficiencies and lacks robust error handling and descriptive variable naming.  The nested loop in the `forEach` functions causes a performance issue.  While there are no syntax errors or critical runtime problems, the lack of comments and potential for data issues should be addressed to improve overall quality. The use of a map would resolve the performance issue. Better descriptive variable names would improve readability. Adding error handling would make it more robust. More thorough comments would enhance maintainability."
+}
+```
+
+Extracted JSON string: {
+  "qualityScore": 60,
+  "issues": [
+    {
+      "line": 18,
+      "severity": "medium",
+      "message": "Inefficient nested loop",
+      "suggestion": "Use a Map or object to improve lookup time from O(n^2) to O(n). Create a map of customer_id to orders to avoid nested iteration."
+    },
+    {
+      "line": 20,
+      "severity": "low",
+      "message": "Poor variable name",
+      "suggestion": "Use more descriptive variable names like `customersWithOrders` instead of `customersWithOrders` (Although this is already used, better descriptive naming should be used throughout)"
+    },
+    {
+      "line": 27,
+      "severity": "low",
+      "message": "Missing error handling",
+      "suggestion": "Consider adding error handling for cases where the data might be malformed or missing (e.g., missing `customer_id` in orders)."
+    },
+    {
+      "line": 20,
+      "severity": "low",
+      "message": "Could use template literals for better readability in the console output",
+      "suggestion": "Use template literals for clearer formatting and improved readability (This is already being done, but better consistency could be applied)."
+    },
+    {
+      "line": 1,
+      "severity": "low",
+      "message": "Lack of comments explaining the purpose of the code",
+      "suggestion": "Add comments to explain the purpose of each section of code and the logic behind the operations. This will make the code more understandable and maintainable."
+    }
+  ],
+  "summary": "The code functions correctly but has inefficiencies and lacks robust error handling and descriptive variable naming.  The nested loop in the `forEach` functions causes a performance issue.  While there are no syntax errors or critical runtime problems, the lack of comments and potential for data issues should be addressed to improve overall quality. The use of a map would resolve the performance issue. Better descriptive variable names would improve readability. Adding error handling would make it more robust. More thorough comments would enhance maintainability."
+}
+✅ Successfully parsed AI response: {
+  qualityScore: 60,
+  issues: [
+    {
+      line: 18,
+      severity: 'medium',
+      message: 'Inefficient nested loop',
+      suggestion: 'Use a Map or object to improve lookup time from O(n^2) to O(n). Create a map of customer_id to orders to avoid nested iteration.'
+    },
+    {
+      line: 20,
+      severity: 'low',
+      message: 'Poor variable name',
+      suggestion: 'Use more descriptive variable names like `customersWithOrders` instead of `customersWithOrders` (Although this is already used, better descriptive naming should be used throughout)'
+    },
+    {
+      line: 27,
+      severity: 'low',
+      message: 'Missing error handling',
+      suggestion: 'Consider adding error handling for cases where the data might be malformed or missing (e.g., missing `customer_id` in orders).'
+    },
+    {
+      line: 20,
+      severity: 'low',
+      message: 'Could use template literals for better readability in the console output',
+      suggestion: 'Use template literals for clearer formatting and improved readability (This is already being done, but better consistency could be applied).'
+    },
+    {
+      line: 1,
+      severity: 'low',
+      message: 'Lack of comments explaining the purpose of the code',
+      suggestion: 'Add comments to explain the purpose of each section of code and the logic behind the operations. This will make the code more understandable and maintainable.'
+    }
+  ],
+  summary: 'The code functions correctly but has inefficiencies and lacks robust error handling and descriptive variable naming.  The nested loop in the `forEach` functions causes a performance issue.  While there are no syntax errors or critical runtime problems, the lack of comments and potential for data issues should be addressed to improve overall quality. The use of a map would resolve the performance issue. Better descriptive variable names would improve readability. Adding error handling would make it more robust. More thorough comments would enhance maintainability.'
+}
+=== AI ANALYSIS SUCCESS ===
+
+✅ Saved review analysis to history for user 035396ce-0bb4-40c2-89f0-09a721b47f82
+Language: input='javascript' -> detected='javascript'
+
+=== AI ANALYSIS START ===
+Type: debug
+Language: javascript
+Code: // Sample data
+const customers = [
+  { customer_id: 1, name: "Alice", city: "Delhi" },
+  { customer_id: 2, name: "Bob", city: "Mumbai" },
+  { customer_id: 3, name: "Charlie", city: "Bangalore" }
+];
+
+const orders = [
+  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },
+  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },
+  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }
+];
+
+// Find customers with at least one order
+const customersWithOrders = customers.filter(c =>
+  orders.some(o => o.customer_id === c.customer_id)
+);
+
+// Print results
+customersWithOrders.forEach(c => {
+  console.log(`Customer: ${c.name} (${c.city})`);
+  orders
+    .filter(o => o.customer_id === c.customer_id)
+    .forEach(o => {
+      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);
+    });
+});
+
+API Key exists: true
+Prompt: You are a code analysis expert. Analyze this javascript code:
+
+```javascript
+// Sample data
+const customers = [
+  { customer_id: 1, name: "Alice", city: "Delhi" },
+  { customer_id: 2, name: "Bob", city: "Mumbai" },
+  { customer_id: 3, name: "Charlie", city: "Bangalore" }
+];
+
+const orders = [
+  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },
+  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },
+  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }
+];
+
+// Find customers with at least one order
+const customersWithOrders = customers.filter(c =>
+  orders.some(o => o.customer_id === c.customer_id)
+);
+
+// Print results
+customersWithOrders.forEach(c => {
+  console.log(`Customer: ${c.name} (${c.city})`);
+  orders
+    .filter(o => o.customer_id === c.customer_id)
+    .forEach(o => {
+      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);
+    });
+});
+
+```
+
+You are a debugging expert. This code has bugs - find them ALL and fix them!
+
+Look for:
+- SYNTAX ERRORS: Missing semicolons, brackets, quotes, incomplete statements
+- LOGIC ERRORS: Wrong operators (= vs ==), infinite loops, wrong conditions
+- RUNTIME ERRORS: Undefined variables, null references, type mismatches
+- MISSING CODE: Incomplete functions, missing return statements
+
+For the given code, identify EVERY bug and provide the corrected version.
+
+Return ONLY this JSON format (no markdown, no extra text):
+{
+  "bugs": [
+    {"line": 1, "issue": "Syntax error: incomplete variable declaration", "fix": "Complete the variable assignment: let x = 'hello';"},
+    {"line": 2, "issue": "ReferenceError: x might be undefined", "fix": "Add null check before using x.length"},
+    {"line": 3, "issue": "Logic error: assignment (=) instead of comparison (===)", "fix": "Change 'if (x = 5)' to 'if (x === 5)'"}
+  ],
+  "fixedCode": "let x = 'hello';
+if (x) {
+  console.log(x.length);
+}
+if (x === 5) {
+  console.log('correct');
+}",
+  "explanation": "Fixed syntax error in variable declaration, added null check, and corrected assignment operator to comparison operator."
+}
+Calling Gemini AI...
+Raw AI Response: ```json
+{
+  "bugs": [],
+  "fixedCode": "// Sample data\nconst customers = [\n  { customer_id: 1, name: \"Alice\", city: \"Delhi\" },\n  { customer_id: 2, name: \"Bob\", city: \"Mumbai\" },\n  { customer_id: 3, name: \"Charlie\", city: \"Bangalore\" }\n];\n\nconst orders = [\n  { order_id: 101, customer_id: 1, order_date: \"2025-09-10\" },\n  { order_id: 102, customer_id: 1, order_date: \"2025-09-12\" },\n  { order_id: 103, customer_id: 2, order_date: \"2025-09-15\" }\n];\n\n// Find customers with at least one order\nconst customersWithOrders = customers.filter(c =>\n  orders.some(o => o.customer_id === c.customer_id)\n);\n\n// Print results\ncustomersWithOrders.forEach(c => {\n  console.log(`Customer: ${c.name} (${c.city})`);\n  orders\n    .filter(o => o.customer_id === c.customer_id)\n    .forEach(o => {\n      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);\n    });\n});",
+  "explanation": "The original code contains no bugs.  It correctly identifies and displays customers with orders and their corresponding order details. No changes were needed."
+}
+```
+
+Extracted JSON string: {
+  "bugs": [],
+  "fixedCode": "// Sample data\nconst customers = [\n  { customer_id: 1, name: \"Alice\", city: \"Delhi\" },\n  { customer_id: 2, name: \"Bob\", city: \"Mumbai\" },\n  { customer_id: 3, name: \"Charlie\", city: \"Bangalore\" }\n];\n\nconst orders = [\n  { order_id: 101, customer_id: 1, order_date: \"2025-09-10\" },\n  { order_id: 102, customer_id: 1, order_date: \"2025-09-12\" },\n  { order_id: 103, customer_id: 2, order_date: \"2025-09-15\" }\n];\n\n// Find customers with at least one order\nconst customersWithOrders = customers.filter(c =>\n  orders.some(o => o.customer_id === c.customer_id)\n);\n\n// Print results\ncustomersWithOrders.forEach(c => {\n  console.log(`Customer: ${c.name} (${c.city})`);\n  orders\n    .filter(o => o.customer_id === c.customer_id)\n    .forEach(o => {\n      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);\n    });\n});",
+  "explanation": "The original code contains no bugs.  It correctly identifies and displays customers with orders and their corresponding order details. No changes were needed."
+}
+✅ Successfully parsed AI response: {
+  bugs: [],
+  fixedCode: '// Sample data\n' +
+    'const customers = [\n' +
+    '  { customer_id: 1, name: "Alice", city: "Delhi" },\n' +
+    '  { customer_id: 2, name: "Bob", city: "Mumbai" },\n' +
+    '  { customer_id: 3, name: "Charlie", city: "Bangalore" }\n' +
+    '];\n' +
+    '\n' +
+    'const orders = [\n' +
+    '  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },\n' +
+    '  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },\n' +
+    '  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }\n' +
+    '];\n' +
+    '\n' +
+    '// Find customers with at least one order\n' +
+    'const customersWithOrders = customers.filter(c =>\n' +
+    '  orders.some(o => o.customer_id === c.customer_id)\n' +
+    ');\n' +
+    '\n' +
+    '// Print results\n' +
+    'customersWithOrders.forEach(c => {\n' +
+    '  console.log(`Customer: ${c.name} (${c.city})`);\n' +
+    '  orders\n' +
+    '    .filter(o => o.customer_id === c.customer_id)\n' +
+    '    .forEach(o => {\n' +
+    '      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);\n' +
+    '    });\n' +
+    '});',
+  explanation: 'The original code contains no bugs.  It correctly identifies and displays customers with orders and their corresponding order details. No changes were needed.'
+}
+=== AI ANALYSIS SUCCESS ===
+
+✅ Saved debug analysis to history for user 035396ce-0bb4-40c2-89f0-09a721b47f82

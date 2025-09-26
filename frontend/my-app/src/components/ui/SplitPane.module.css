@@ -1,0 +1,116 @@
+.splitPane {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.horizontal {
+  flex-direction: row;
+}
+
+.vertical {
+  flex-direction: column;
+}
+
+.pane {
+  overflow: hidden;
+  position: relative;
+}
+
+.splitter {
+  background: var(--border-color);
+  position: relative;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.horizontal .splitter {
+  width: 4px;
+  cursor: ew-resize;
+  min-width: 4px;
+}
+
+.vertical .splitter {
+  height: 4px;
+  cursor: ns-resize;
+  min-height: 4px;
+}
+
+.splitter:hover {
+  background: rgba(139, 92, 246, 0.3);
+}
+
+.splitterActive {
+  background: rgba(139, 92, 246, 0.5);
+}
+
+.splitterHandle {
+  background: rgba(139, 92, 246, 0.6);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.horizontal .splitterHandle {
+  width: 2px;
+  height: 40px;
+}
+
+.vertical .splitterHandle {
+  width: 40px;
+  height: 2px;
+}
+
+.splitter:hover .splitterHandle {
+  background: rgba(139, 92, 246, 0.8);
+  transform: scale(1.2);
+}
+
+.splitterActive .splitterHandle {
+  background: rgba(139, 92, 246, 1);
+  transform: scale(1.5);
+}
+
+.dragOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  cursor: inherit;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .splitter {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .splitter:hover {
+  background: rgba(139, 92, 246, 0.4);
+}
+
+[data-theme="dark"] .splitterActive {
+  background: rgba(139, 92, 246, 0.6);
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .horizontal {
+    flex-direction: column;
+  }
+  
+  .horizontal .splitter {
+    width: 100%;
+    height: 4px;
+    cursor: ns-resize;
+  }
+  
+  .horizontal .splitterHandle {
+    width: 40px;
+    height: 2px;
+  }
+}
