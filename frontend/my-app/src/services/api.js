@@ -32,10 +32,13 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  register: (username, email, password) => api.post('/auth/register', { username, email, password }),
+  register: (userData) => api.post('/auth/register', userData),
   login: (email, password) => api.post('/auth/login', { email, password }),
   getProfile: () => api.get('/auth/me'),
   updatePreferences: (preferences) => api.patch('/auth/preferences', preferences),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  verifyOTP: (data) => api.post('/auth/verify-otp', data),
+  resetPassword: (data) => api.post('/auth/reset-password', data),
 };
 
 export const aiAPI = {

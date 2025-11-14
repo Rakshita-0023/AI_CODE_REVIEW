@@ -13,6 +13,7 @@ import notesRoutes from './src/routes/notes.js';
 import User from './src/models/User.js';
 import Analysis from './src/models/Analysis.js';
 import Note from './src/models/Note.js';
+import OTP from './src/models/OTP.js';
 
 dotenv.config();
 
@@ -164,7 +165,7 @@ Return ONLY this JSON format (no markdown, no extra text):
     {"line": 2, "issue": "ReferenceError: x might be undefined", "fix": "Add null check before using x.length"},
     {"line": 3, "issue": "Logic error: assignment (=) instead of comparison (===)", "fix": "Change 'if (x = 5)' to 'if (x === 5)'"}
   ],
-  "fixedCode": "let x = 'hello';\nif (x) {\n  console.log(x.length);\n}\nif (x === 5) {\n  console.log('correct');\n}",
+  "fixedCode": "let x = 'hello';\\nif (x) {\\n  console.log(x.length);\\n}\\nif (x === 5) {\\n  console.log('correct');\\n}",
   "explanation": "Fixed syntax error in variable declaration, added null check, and corrected assignment operator to comparison operator."
 }`;
       
@@ -187,19 +188,19 @@ Return ONLY this JSON format (no markdown, no extra text):
   "alternatives": [
     {
       "approach": "Functional Programming Style",
-      "code": "const x = 'hello';\nconst logLength = (str) => str && console.log(str.length);\nlogLength(x);\nconst checkValue = (val) => val === 5 && console.log('correct');\ncheckValue(x);",
+      "code": "const x = 'hello';\\nconst logLength = (str) => str && console.log(str.length);\\nlogLength(x);\\nconst checkValue = (val) => val === 5 && console.log('correct');\\ncheckValue(x);",
       "pros": ["Immutable", "Pure functions", "Predictable"],
       "cons": ["May be less familiar", "More verbose"]
     },
     {
       "approach": "Object-Oriented Style",
-      "code": "class StringHandler {\n  constructor(value) { this.value = value; }\n  logLength() { this.value && console.log(this.value.length); }\n  checkValue(target) { this.value === target && console.log('correct'); }\n}\nconst handler = new StringHandler('hello');\nhandler.logLength();\nhandler.checkValue(5);",
+      "code": "class StringHandler {\\n  constructor(value) { this.value = value; }\\n  logLength() { this.value && console.log(this.value.length); }\\n  checkValue(target) { this.value === target && console.log('correct'); }\\n}\\nconst handler = new StringHandler('hello');\\nhandler.logLength();\\nhandler.checkValue(5);",
       "pros": ["Encapsulation", "Reusable", "Organized"],
       "cons": ["More complex", "Overkill for simple tasks"]
     },
     {
       "approach": "Modern ES6+ Style",
-      "code": "const x = 'hello';\nx?.length && console.log(x.length);\n(x === 5) ? console.log('correct') : console.log('not 5');",
+      "code": "const x = 'hello';\\nx?.length && console.log(x.length);\\n(x === 5) ? console.log('correct') : console.log('not 5');",
       "pros": ["Concise", "Modern syntax", "Safe property access"],
       "cons": ["Requires modern browser", "Less explicit"]
     }

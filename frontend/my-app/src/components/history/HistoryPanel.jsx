@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ClockIcon, CodeBracketIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { ClockIcon, CodeBracketIcon, TrashIcon, EyeIcon, MagnifyingGlassIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import useStore from '../../store/useStore';
 import { historyAPI } from '../../services/api';
 import styles from './HistoryPanel.module.css';
@@ -7,14 +7,31 @@ import styles from './HistoryPanel.module.css';
 const HistoryPanel = ({ isOpen, onClose }) => {
   const { isAuthenticated, analysisHistory, user } = useStore();
   const [history, setHistory] = useState([]);
+  const [filteredHistory, setFilteredHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
+  
+  // Search & Filter States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [filterType, setFilterType] = useState('all');
+  const [filterLanguage, setFilterLanguage] = useState('all');
+  
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
       fetchHistory();
     }
-  }, [isOpen, isAuthenticated, user]);
+  }, [isOpen, isAuthenticated, user, currentPage, sortBy, sortOrder]);
+
+  useEffect(() => {
+    applyFiltersAndSearch();
+  }, [history, searchTerm, filterType, filterLanguage]);
 
   const getUserStorageKey = (key) => {
     if (isAuthenticated && user?.id) {
@@ -31,7 +48,7 @@ const HistoryPanel = ({ isOpen, onClose }) => {
       const localHistory = JSON.parse(localStorage.getItem(storageKey) || '[]');
       
       // Transform data to match expected format
-      const formattedHistory = localHistory.map((item, index) => ({
+      let formattedHistory = localHistory.map((item, index) => ({
         id: item.id || `local-${index}`,
         type: item.type || 'review',
         language: item.language || 'javascript',
@@ -42,13 +59,72 @@ const HistoryPanel = ({ isOpen, onClose }) => {
         result: item
       }));
       
+      // Apply sorting
+      formattedHistory.sort((a, b) => {
+        if (sortBy === 'date') {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        }
+        if (sortBy === 'score') {
+          const scoreA = a.qualityScore || 0;
+          const scoreB = b.qualityScore || 0;
+          return sortOrder === 'desc' ? scoreB - scoreA : scoreA - scoreB;
+        }
+        if (sortBy === 'type') {
+          return sortOrder === 'desc' ? b.type.localeCompare(a.type) : a.type.localeCompare(b.type);
+        }
+        return 0;
+      });
+      
       setHistory(formattedHistory);
+      setTotalItems(formattedHistory.length);
     } catch (error) {
       console.error('Failed to fetch history:', error);
       setHistory([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFiltersAndSearch = () => {
+    let filtered = [...history];
+
+    // Search
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.codePreview?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.language?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.type?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by type
+    if (filterType !== 'all') {
+      filtered = filtered.filter(item => item.type === filterType);
+    }
+
+    // Filter by language
+    if (filterLanguage !== 'all') {
+      filtered = filtered.filter(item => item.language === filterLanguage);
+    }
+
+    setFilteredHistory(filtered);
+  };
+
+  const getUniqueLanguages = () => {
+    return [...new Set(history.map(item => item.language))].filter(Boolean);
+  };
+
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredHistory.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = () => {
+    return Math.ceil(filteredHistory.length / itemsPerPage);
   };
 
   const deleteAnalysis = async (id) => {
@@ -108,7 +184,7 @@ const HistoryPanel = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold flex items-center space-x-2">
             <ClockIcon className="w-5 h-5" />
-            <span>Analysis History</span>
+            <span>Analysis History ({filteredHistory.length} results)</span>
           </h2>
           <button
             onClick={onClose}
@@ -118,18 +194,92 @@ const HistoryPanel = ({ isOpen, onClose }) => {
           </button>
         </div>
 
+        {/* Search & Filters */}
+        <div className="p-4 border-b bg-white/5">
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Search */}
+            <div className="flex-1 min-w-64">
+              <div className="relative">
+                <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
+                <input
+                  type="text"
+                  placeholder="Search code, language, or type..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-[#7B3FE4] focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Sort */}
+            <select
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(e) => {
+                const [field, order] = e.target.value.split('-');
+                setSortBy(field);
+                setSortOrder(order);
+                setCurrentPage(1);
+              }}
+              className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+            >
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="score-desc">Highest Score</option>
+              <option value="score-asc">Lowest Score</option>
+              <option value="type-asc">Type A-Z</option>
+            </select>
+
+            {/* Filter by Type */}
+            <select
+              value={filterType}
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+            >
+              <option value="all">All Types</option>
+              <option value="review">Review</option>
+              <option value="debug">Debug</option>
+              <option value="optimize">Optimize</option>
+              <option value="approaches">Approaches</option>
+            </select>
+
+            {/* Filter by Language */}
+            <select
+              value={filterLanguage}
+              onChange={(e) => {
+                setFilterLanguage(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+            >
+              <option value="all">All Languages</option>
+              {getUniqueLanguages().map(lang => (
+                <option key={lang} value={lang}>{lang}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="flex-1 flex overflow-hidden">
           {/* History List */}
           <div className="w-1/2 border-r overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center">Loading...</div>
-            ) : history.length === 0 ? (
+            ) : filteredHistory.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
-                No analysis history found. Start analyzing code to build your history!
+                {searchTerm || filterType !== 'all' || filterLanguage !== 'all' 
+                  ? 'No results found for your filters' 
+                  : 'No analysis history found. Start analyzing code to build your history!'}
               </div>
             ) : (
-              <div className="p-4 space-y-3">
-                {history.map((item) => (
+              <>
+                <div className="p-4 space-y-3">
+                  {getPaginatedData().map((item) => (
                   <div
                     key={item.id}
                     className="group border rounded-lg p-3 hover:bg-[#7B3FE4]/10 hover:border-[#7B3FE4]/30 cursor-pointer border-white/10 transition-all"
@@ -180,8 +330,53 @@ const HistoryPanel = ({ isOpen, onClose }) => {
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                
+                {/* Pagination */}
+                {getTotalPages() > 1 && (
+                  <div className="p-4 border-t border-white/10 flex items-center justify-between">
+                    <div className="text-sm text-white/60">
+                      Page {currentPage} of {getTotalPages()} ({filteredHistory.length} total)
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 border border-white/20 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10"
+                      >
+                        <ChevronLeftIcon className="w-4 h-4" />
+                      </button>
+                      
+                      {[...Array(Math.min(5, getTotalPages()))].map((_, i) => {
+                        const page = Math.max(1, currentPage - 2) + i;
+                        if (page > getTotalPages()) return null;
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-1 rounded ${
+                              currentPage === page 
+                                ? 'bg-[#7B3FE4] text-white' 
+                                : 'border border-white/20 hover:bg-white/10'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                      
+                      <button
+                        onClick={() => setCurrentPage(Math.min(getTotalPages(), currentPage + 1))}
+                        disabled={currentPage === getTotalPages()}
+                        className="p-2 border border-white/20 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10"
+                      >
+                        <ChevronRightIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

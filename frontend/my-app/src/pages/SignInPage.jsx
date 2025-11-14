@@ -161,6 +161,12 @@ const SignInPage = () => {
           </form>
 
           <div className="mt-6 text-center space-y-3">
+            <p className="text-center text-white/70 mt-4">
+              <Link to="/forgot-password" className="text-purple-400 hover:text-purple-300 font-semibold">
+                Forgot Password?
+              </Link>
+            </p>
+            
             <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-3">
               <p className="text-purple-300 text-sm font-medium mb-1">Demo Account</p>
               <p className="text-gray-400 text-xs">Email: demo@codesense.com</p>

@@ -1,33 +1,46 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import User from '../models/User.js';
+import OTP from '../models/OTP.js';
+import { sendOTPEmail } from '../services/emailService.js';
+import { sendOTPSMS } from '../services/smsService.js';
 
 const router = express.Router();
 
-// Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
-// Register new user
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Enhanced Registration
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { fullName, username, email, phone, password, confirmPassword } = req.body;
 
-    // Validation
-    if (!username || !email || !password) {
+    if (!fullName || !username || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
     }
 
     if (password.length < 6) {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Check if user already exists
+    if (!/^\+91[6-9]\d{9}$/.test(phone)) {
+      return res.status(400).json({ error: 'Invalid phone number format. Use +91XXXXXXXXXX' });
+    }
+
     const existingUser = await User.findOne({
       where: {
-        [Op.or]: [{ email }, { username }]
+        [Op.or]: [{ email }, { username }, { phone }]
       }
     });
 
@@ -38,12 +51,16 @@ router.post('/register', async (req, res) => {
       if (existingUser.username === username) {
         return res.status(400).json({ error: 'Username already taken' });
       }
+      if (existingUser.phone === phone) {
+        return res.status(400).json({ error: 'Phone number already registered' });
+      }
     }
 
-    // Create new user
     const user = await User.create({
+      fullName,
       username,
       email,
+      phone,
       password,
     });
 
@@ -60,7 +77,165 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login user
+// Forgot Password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { identifier, type } = req.body;
+
+    if (!identifier || !type) {
+      return res.status(400).json({ error: 'Identifier and type are required' });
+    }
+
+    const whereClause = type === 'email' ? { email: identifier } : { phone: identifier };
+    const user = await User.findOne({ where: whereClause });
+
+    if (!user) {
+      return res.status(404).json({ error: `No account found with this ${type}` });
+    }
+
+    // Skip rate limiting in development
+    if (process.env.NODE_ENV === 'production') {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const recentOTPs = await OTP.count({
+        where: {
+          identifier,
+          type,
+          createdAt: { [Op.gte]: oneHourAgo }
+        }
+      });
+
+      if (recentOTPs >= 3) {
+        return res.status(429).json({ error: 'Too many OTP requests. Try again later.' });
+      }
+    }
+
+    const otpCode = generateOTP();
+    const otpHash = await bcrypt.hash(otpCode, 10);
+
+    await OTP.create({
+      identifier,
+      type,
+      otpHash,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    // Send OTP via email or SMS
+    if (type === 'email') {
+      await sendOTPEmail(identifier, otpCode);
+    } else {
+      await sendOTPSMS(identifier, otpCode);
+    }
+    
+    res.json({
+      message: `OTP sent to your ${type}`,
+      identifier: type === 'email' ? identifier : identifier.replace(/(\+91)(\d{2})(\d{4})(\d{4})/, '$1XX$3XXXX')
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Failed to send OTP' });
+  }
+});
+
+// Verify OTP
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { identifier, type, otp } = req.body;
+
+    if (!identifier || !type || !otp) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const otpRecord = await OTP.findOne({
+      where: {
+        identifier,
+        type,
+        isUsed: false,
+        expiresAt: { [Op.gt]: new Date() }
+      },
+      order: [['createdAt', 'DESC']]
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    if (otpRecord.attempts >= 3) {
+      return res.status(400).json({ error: 'Too many failed attempts' });
+    }
+
+    const isValidOTP = await otpRecord.compareOTP(otp);
+
+    if (!isValidOTP) {
+      await otpRecord.increment('attempts');
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    await otpRecord.update({ isUsed: true });
+
+    const resetToken = jwt.sign(
+      { identifier, type, otpId: otpRecord.id },
+      process.env.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    res.json({
+      message: 'OTP verified successfully',
+      resetToken
+    });
+
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ error: 'OTP verification failed' });
+  }
+});
+
+// Reset Password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { resetToken, newPassword, confirmPassword } = req.body;
+
+    if (!resetToken || !newPassword || !confirmPassword) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+    const { identifier, type } = decoded;
+
+    const whereClause = type === 'email' ? { email: identifier } : { phone: identifier };
+    const user = await User.findOne({ where: whereClause });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await user.update({ password: newPassword });
+
+    await OTP.destroy({
+      where: {
+        identifier,
+        type,
+        isUsed: true
+      }
+    });
+
+    res.json({ message: 'Password reset successfully' });
+
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ error: 'Password reset failed' });
+  }
+});
+
+// Login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -69,7 +244,6 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Find user by email
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
@@ -79,7 +253,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Check password
     const isValidPassword = await user.comparePassword(password);
 
     if (!isValidPassword) {
@@ -89,7 +262,7 @@ router.post('/login', async (req, res) => {
     const token = generateToken(user.id);
 
     res.json({
-      message: `Welcome back, ${user.username}!`,
+      message: `Welcome back, ${user.fullName}!`,
       token,
       user: user.toJSON(),
     });

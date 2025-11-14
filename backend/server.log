@@ -1,348 +1,342 @@
+
+> ai-code-reviewer-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+Executing (default): SELECT 1+1 AS result
 Database connected successfully
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Users'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'Users' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'Users' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "username" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "username" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("username");ALTER TABLE "Users" ALTER COLUMN "username" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "email" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "email" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("email");ALTER TABLE "Users" ALTER COLUMN "email" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "password" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "password" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "password" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "preferences" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "preferences" SET DEFAULT '{"theme":"light","language":"en"}';ALTER TABLE "Users" ALTER COLUMN "preferences" TYPE JSON;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "fullName" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "fullName" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "fullName" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "phone" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "phone" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("phone");ALTER TABLE "Users" ALTER COLUMN "phone" TYPE VARCHAR(255) ;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'Users' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'OTPs'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_OTPs_type' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'OTPs' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'OTPs' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "identifier" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "identifier" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "identifier" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "type" DROP DEFAULT;DO 'BEGIN CREATE TYPE "public"."enum_OTPs_type" AS ENUM(''email'', ''phone''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "OTPs" ALTER COLUMN "type" TYPE "public"."enum_OTPs_type" USING ("type"::"public"."enum_OTPs_type");
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "otpHash" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "otpHash" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "otpHash" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "attempts" DROP NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "attempts" SET DEFAULT 0;ALTER TABLE "OTPs" ALTER COLUMN "attempts" TYPE INTEGER;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "isUsed" DROP NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "isUsed" SET DEFAULT false;ALTER TABLE "OTPs" ALTER COLUMN "isUsed" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'OTPs' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Analyses'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_Analyses_type' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'Analyses' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'Analyses' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "Analyses" DROP CONSTRAINT "Analyses_userId_fkey"
+Executing (default): ALTER TABLE "Analyses" DROP CONSTRAINT "Analyses_userId_fkey1"
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "userId" SET NOT NULL;ALTER TABLE "Analyses"  ADD FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "type" DROP DEFAULT;DO 'BEGIN CREATE TYPE "public"."enum_Analyses_type" AS ENUM(''review'', ''debug'', ''approaches'', ''optimize''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "Analyses" ALTER COLUMN "type" TYPE "public"."enum_Analyses_type" USING ("type"::"public"."enum_Analyses_type");
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "language" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "language" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "language" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "originalCode" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "originalCode" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "originalCode" TYPE TEXT;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "result" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "result" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "result" TYPE JSON;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" DROP NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" TYPE INTEGER;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "processingTime" DROP NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "processingTime" SET DEFAULT 0;ALTER TABLE "Analyses" ALTER COLUMN "processingTime" TYPE INTEGER;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'Analyses' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'notes'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'notes' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'notes' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "notes" DROP CONSTRAINT "notes_userId_fkey"
+Executing (default): ALTER TABLE "notes" DROP CONSTRAINT "notes_userId_fkey1"
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "userId" SET NOT NULL;ALTER TABLE "notes"  ADD FOREIGN KEY ("userId") REFERENCES "Users" ("id");
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "title" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "title" SET DEFAULT 'Untitled Note';ALTER TABLE "notes" ALTER COLUMN "title" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "content" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "content" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "content" TYPE TEXT;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "tags" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "tags" SET DEFAULT '[]';ALTER TABLE "notes" ALTER COLUMN "tags" TYPE JSON;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "color" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "color" SET DEFAULT 'default';ALTER TABLE "notes" ALTER COLUMN "color" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "isPinned" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "isPinned" SET DEFAULT false;ALTER TABLE "notes" ALTER COLUMN "isPinned" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "folder" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "folder" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "folder" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "lastModified" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "lastModified" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "lastModified" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'notes' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
 Database synchronized
 Server running on port 3001
 Environment: development
-Language: input='javascript' -> detected='javascript'
+Executing (default): SELECT "id", "fullName", "username", "email", "phone", "password", "preferences", "createdAt", "updatedAt" FROM "Users" AS "User" WHERE "User"."email" = 'polana.rakshita2024@nst.rishihood.edu.in';
+Executing (default): SELECT count(*) AS "count" FROM "OTPs" AS "OTP" WHERE "OTP"."identifier" = 'polana.rakshita2024@nst.rishihood.edu.in' AND "OTP"."type" = 'email' AND "OTP"."createdAt" >= '2025-11-04 12:50:59.833 +00:00';
+Executing (default): INSERT INTO "OTPs" ("id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt";
+📧 Email OTP for polana.rakshita2024@nst.rishihood.edu.in: 373709
+⚠️  Gmail not configured. Using console fallback.
+OTP sent to polana.rakshita2024@nst.rishihood.edu.in: 373709
+Executing (default): SELECT "id", "fullName", "username", "email", "phone", "password", "preferences", "createdAt", "updatedAt" FROM "Users" AS "User" WHERE "User"."phone" = '+919899893982';
+Executing (default): SELECT count(*) AS "count" FROM "OTPs" AS "OTP" WHERE "OTP"."identifier" = '+919899893982' AND "OTP"."type" = 'phone' AND "OTP"."createdAt" >= '2025-11-04 12:51:16.786 +00:00';
+Executing (default): INSERT INTO "OTPs" ("id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt";
+📱 SMS OTP for +919899893982: 983777
+⚠️  Twilio not configured. Using console fallback.
+OTP sent to +919899893982: 983777
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+Executing (default): SELECT 1+1 AS result
+Database connected successfully
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Users'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'Users' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'Users' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "username" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "username" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("username");ALTER TABLE "Users" ALTER COLUMN "username" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "email" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "email" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("email");ALTER TABLE "Users" ALTER COLUMN "email" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "password" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "password" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "password" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "preferences" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "preferences" SET DEFAULT '{"theme":"light","language":"en"}';ALTER TABLE "Users" ALTER COLUMN "preferences" TYPE JSON;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "fullName" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "fullName" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "fullName" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "phone" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "phone" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("phone");ALTER TABLE "Users" ALTER COLUMN "phone" TYPE VARCHAR(255) ;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'Users' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'OTPs'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_OTPs_type' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'OTPs' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'OTPs' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "identifier" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "identifier" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "identifier" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "type" DROP DEFAULT;DO 'BEGIN CREATE TYPE "public"."enum_OTPs_type" AS ENUM(''email'', ''phone''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "OTPs" ALTER COLUMN "type" TYPE "public"."enum_OTPs_type" USING ("type"::"public"."enum_OTPs_type");
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "otpHash" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "otpHash" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "otpHash" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "attempts" DROP NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "attempts" SET DEFAULT 0;ALTER TABLE "OTPs" ALTER COLUMN "attempts" TYPE INTEGER;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "isUsed" DROP NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "isUsed" SET DEFAULT false;ALTER TABLE "OTPs" ALTER COLUMN "isUsed" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'OTPs' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Analyses'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_Analyses_type' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'Analyses' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'Analyses' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "Analyses" DROP CONSTRAINT "Analyses_userId_fkey"
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "userId" SET NOT NULL;ALTER TABLE "Analyses"  ADD FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "type" DROP DEFAULT;DO 'BEGIN CREATE TYPE "public"."enum_Analyses_type" AS ENUM(''review'', ''debug'', ''approaches'', ''optimize''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "Analyses" ALTER COLUMN "type" TYPE "public"."enum_Analyses_type" USING ("type"::"public"."enum_Analyses_type");
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "language" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "language" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "language" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "originalCode" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "originalCode" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "originalCode" TYPE TEXT;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "result" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "result" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "result" TYPE JSON;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" DROP NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" TYPE INTEGER;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "processingTime" DROP NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "processingTime" SET DEFAULT 0;ALTER TABLE "Analyses" ALTER COLUMN "processingTime" TYPE INTEGER;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'Analyses' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'notes'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'notes' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'notes' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "notes" DROP CONSTRAINT "notes_userId_fkey"
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "userId" SET NOT NULL;ALTER TABLE "notes"  ADD FOREIGN KEY ("userId") REFERENCES "Users" ("id");
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "title" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "title" SET DEFAULT 'Untitled Note';ALTER TABLE "notes" ALTER COLUMN "title" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "content" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "content" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "content" TYPE TEXT;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "tags" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "tags" SET DEFAULT '[]';ALTER TABLE "notes" ALTER COLUMN "tags" TYPE JSON;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "color" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "color" SET DEFAULT 'default';ALTER TABLE "notes" ALTER COLUMN "color" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "isPinned" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "isPinned" SET DEFAULT false;ALTER TABLE "notes" ALTER COLUMN "isPinned" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "folder" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "folder" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "folder" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "lastModified" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "lastModified" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "lastModified" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'notes' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Database synchronized
+Server running on port 3001
+Environment: development
+Executing (default): SELECT "id", "fullName", "username", "email", "phone", "password", "preferences", "createdAt", "updatedAt" FROM "Users" AS "User" WHERE "User"."phone" = '+919899893982';
+Executing (default): SELECT count(*) AS "count" FROM "OTPs" AS "OTP" WHERE "OTP"."identifier" = '+919899893982' AND "OTP"."type" = 'phone' AND "OTP"."createdAt" >= '2025-11-04 12:54:31.647 +00:00';
+Executing (default): INSERT INTO "OTPs" ("id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt";
+📱 SMS OTP for +919899893982: 763527
+⚠️  Twilio not configured. Using console fallback.
+✅ OTP generated for +919899893982: 763527
+Executing (default): SELECT "id", "fullName", "username", "email", "phone", "password", "preferences", "createdAt", "updatedAt" FROM "Users" AS "User" WHERE "User"."email" = 'polana.rakshita2024@nst.rishihood.edu.in';
+Executing (default): SELECT count(*) AS "count" FROM "OTPs" AS "OTP" WHERE "OTP"."identifier" = 'polana.rakshita2024@nst.rishihood.edu.in' AND "OTP"."type" = 'email' AND "OTP"."createdAt" >= '2025-11-04 12:57:47.328 +00:00';
+Executing (default): INSERT INTO "OTPs" ("id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt";
+📧 Email OTP for polana.rakshita2024@nst.rishihood.edu.in: 781614
+⚠️  Gmail not configured. Using console fallback.
+✅ OTP generated for polana.rakshita2024@nst.rishihood.edu.in: 781614
+Executing (default): SELECT "id", "identifier", "type", "otpHash", "expiresAt", "attempts", "isUsed", "createdAt", "updatedAt" FROM "OTPs" AS "OTP" WHERE "OTP"."identifier" = 'polana.rakshita2024@nst.rishihood.edu.in' AND "OTP"."type" = 'email' AND "OTP"."isUsed" = false AND "OTP"."expiresAt" > '2025-11-04 13:57:56.838 +00:00' ORDER BY "OTP"."createdAt" DESC LIMIT 1;
+Executing (default): UPDATE "OTPs" SET "isUsed"=$1,"updatedAt"=$2 WHERE "id" = $3
+Executing (default): SELECT "id", "fullName", "username", "email", "phone", "password", "preferences", "createdAt", "updatedAt" FROM "Users" AS "User" WHERE "User"."email" = 'polana.rakshita2024@nst.rishihood.edu.in';
+Executing (default): SELECT count(*) AS "count" FROM "OTPs" AS "OTP" WHERE "OTP"."identifier" = 'polana.rakshita2024@nst.rishihood.edu.in' AND "OTP"."type" = 'email' AND "OTP"."createdAt" >= '2025-11-04 12:58:16.547 +00:00';
+Executing (default): SELECT "id", "fullName", "username", "email", "phone", "password", "preferences", "createdAt", "updatedAt" FROM "Users" AS "User" WHERE "User"."email" = 'polana.rakshita2024@nst.rishihood.edu.in';
+Executing (default): SELECT count(*) AS "count" FROM "OTPs" AS "OTP" WHERE "OTP"."identifier" = 'polana.rakshita2024@nst.rishihood.edu.in' AND "OTP"."type" = 'email' AND "OTP"."createdAt" >= '2025-11-04 12:58:29.549 +00:00';
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+Executing (default): SELECT 1+1 AS result
+Database connected successfully
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Users'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'Users' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'Users' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "username" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "username" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("username");ALTER TABLE "Users" ALTER COLUMN "username" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "email" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "email" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("email");ALTER TABLE "Users" ALTER COLUMN "email" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "password" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "password" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "password" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "preferences" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "preferences" SET DEFAULT '{"theme":"light","language":"en"}';ALTER TABLE "Users" ALTER COLUMN "preferences" TYPE JSON;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "fullName" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "fullName" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "fullName" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "phone" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "phone" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("phone");ALTER TABLE "Users" ALTER COLUMN "phone" TYPE VARCHAR(255) ;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'Users' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'OTPs'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_OTPs_type' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'OTPs' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'OTPs' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "identifier" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "identifier" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "identifier" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "type" DROP DEFAULT;DO 'BEGIN CREATE TYPE "public"."enum_OTPs_type" AS ENUM(''email'', ''phone''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "OTPs" ALTER COLUMN "type" TYPE "public"."enum_OTPs_type" USING ("type"::"public"."enum_OTPs_type");
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "otpHash" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "otpHash" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "otpHash" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "attempts" DROP NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "attempts" SET DEFAULT 0;ALTER TABLE "OTPs" ALTER COLUMN "attempts" TYPE INTEGER;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "isUsed" DROP NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "isUsed" SET DEFAULT false;ALTER TABLE "OTPs" ALTER COLUMN "isUsed" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'OTPs' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Analyses'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_Analyses_type' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'Analyses' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'Analyses' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "Analyses" DROP CONSTRAINT "Analyses_userId_fkey"
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "userId" SET NOT NULL;ALTER TABLE "Analyses"  ADD FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "type" DROP DEFAULT;DO 'BEGIN CREATE TYPE "public"."enum_Analyses_type" AS ENUM(''review'', ''debug'', ''approaches'', ''optimize''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "Analyses" ALTER COLUMN "type" TYPE "public"."enum_Analyses_type" USING ("type"::"public"."enum_Analyses_type");
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "language" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "language" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "language" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "originalCode" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "originalCode" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "originalCode" TYPE TEXT;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "result" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "result" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "result" TYPE JSON;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" DROP NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" TYPE INTEGER;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "processingTime" DROP NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "processingTime" SET DEFAULT 0;ALTER TABLE "Analyses" ALTER COLUMN "processingTime" TYPE INTEGER;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'Analyses' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'notes'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'notes' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'notes' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "notes" DROP CONSTRAINT "notes_userId_fkey"
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "userId" SET NOT NULL;ALTER TABLE "notes"  ADD FOREIGN KEY ("userId") REFERENCES "Users" ("id");
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "title" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "title" SET DEFAULT 'Untitled Note';ALTER TABLE "notes" ALTER COLUMN "title" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "content" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "content" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "content" TYPE TEXT;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "tags" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "tags" SET DEFAULT '[]';ALTER TABLE "notes" ALTER COLUMN "tags" TYPE JSON;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "color" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "color" SET DEFAULT 'default';ALTER TABLE "notes" ALTER COLUMN "color" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "isPinned" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "isPinned" SET DEFAULT false;ALTER TABLE "notes" ALTER COLUMN "isPinned" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "folder" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "folder" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "folder" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "lastModified" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "lastModified" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "lastModified" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'notes' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Database synchronized
+Server running on port 3001
+Environment: development
+Executing (default): SELECT "id", "fullName", "username", "email", "phone", "password", "preferences", "createdAt", "updatedAt" FROM "Users" AS "User" WHERE "User"."email" = 'polana.rakshita2024@nst.rishihood.edu.in';
+Executing (default): INSERT INTO "OTPs" ("id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id","identifier","type","otpHash","expiresAt","attempts","isUsed","createdAt","updatedAt";
+📧 Email OTP for polana.rakshita2024@nst.rishihood.edu.in: 846984
+⚠️  Gmail not configured. Using console fallback.
+✅ OTP generated for polana.rakshita2024@nst.rishihood.edu.in: 846984
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+file:///Users/polana.rakshita2024nstrishihood.edu.in/Documents/AI_CODE_REVIEW/backend/src/services/emailService.js:7
+const transporter = isConfigured ? nodemailer.createTransporter({
+                                              ^
 
-=== AI ANALYSIS START ===
-Type: review
-Language: javascript
-Code: // Sample data
-const customers = [
-  { customer_id: 1, name: "Alice", city: "Delhi" },
-  { customer_id: 2, name: "Bob", city: "Mumbai" },
-  { customer_id: 3, name: "Charlie", city: "Bangalore" }
-];
+TypeError: nodemailer.createTransporter is not a function
+    at file:///Users/polana.rakshita2024nstrishihood.edu.in/Documents/AI_CODE_REVIEW/backend/src/services/emailService.js:7:47
+    at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
 
-const orders = [
-  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },
-  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },
-  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }
-];
+Node.js v22.16.0
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+file:///Users/polana.rakshita2024nstrishihood.edu.in/Documents/AI_CODE_REVIEW/backend/src/services/emailService.js:7
+const transporter = isConfigured ? nodemailer.createTransporter({
+                                              ^
 
-// Find customers with at least one order
-const customersWithOrders = customers.filter(c =>
-  orders.some(o => o.customer_id === c.customer_id)
-);
+TypeError: nodemailer.createTransporter is not a function
+    at file:///Users/polana.rakshita2024nstrishihood.edu.in/Documents/AI_CODE_REVIEW/backend/src/services/emailService.js:7:47
+    at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
 
-// Print results
-customersWithOrders.forEach(c => {
-  console.log(`Customer: ${c.name} (${c.city})`);
-  orders
-    .filter(o => o.customer_id === c.customer_id)
-    .forEach(o => {
-      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);
-    });
-});
+Node.js v22.16.0
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+Executing (default): SELECT 1+1 AS result
+Database connected successfully
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Users'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'Users' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'Users' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "username" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "username" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("username");ALTER TABLE "Users" ALTER COLUMN "username" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "email" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "email" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("email");ALTER TABLE "Users" ALTER COLUMN "email" TYPE VARCHAR(255)  ;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "password" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "password" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "password" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "preferences" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "preferences" SET DEFAULT '{"theme":"light","language":"en"}';ALTER TABLE "Users" ALTER COLUMN "preferences" TYPE JSON;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "Users" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "fullName" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "fullName" DROP DEFAULT;ALTER TABLE "Users" ALTER COLUMN "fullName" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Users" ALTER COLUMN "phone" DROP NOT NULL;ALTER TABLE "Users" ALTER COLUMN "phone" DROP DEFAULT;ALTER TABLE "Users"  ADD UNIQUE ("phone");ALTER TABLE "Users" ALTER COLUMN "phone" TYPE VARCHAR(255) ;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'Users' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'OTPs'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_OTPs_type' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'OTPs' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'OTPs' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "identifier" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "identifier" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "identifier" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "type" DROP DEFAULT;DO 'BEGIN CREATE TYPE "public"."enum_OTPs_type" AS ENUM(''email'', ''phone''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "OTPs" ALTER COLUMN "type" TYPE "public"."enum_OTPs_type" USING ("type"::"public"."enum_OTPs_type");
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "otpHash" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "otpHash" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "otpHash" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "expiresAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "attempts" DROP NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "attempts" SET DEFAULT 0;ALTER TABLE "OTPs" ALTER COLUMN "attempts" TYPE INTEGER;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "isUsed" DROP NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "isUsed" SET DEFAULT false;ALTER TABLE "OTPs" ALTER COLUMN "isUsed" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "OTPs" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'OTPs' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Analyses'
+Executing (default): SELECT t.typname enum_name, array_agg(e.enumlabel ORDER BY enumsortorder) enum_value FROM pg_type t JOIN pg_enum e ON t.oid = e.enumtypid JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'public' AND t.typname='enum_Analyses_type' GROUP BY 1
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'Analyses' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'Analyses' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "Analyses" DROP CONSTRAINT "Analyses_userId_fkey"
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "userId" SET NOT NULL;ALTER TABLE "Analyses"  ADD FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "type" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "type" DROP DEFAULT;DO 'BEGIN CREATE TYPE "public"."enum_Analyses_type" AS ENUM(''review'', ''debug'', ''approaches'', ''optimize''); EXCEPTION WHEN duplicate_object THEN null; END';ALTER TABLE "Analyses" ALTER COLUMN "type" TYPE "public"."enum_Analyses_type" USING ("type"::"public"."enum_Analyses_type");
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "language" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "language" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "language" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "originalCode" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "originalCode" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "originalCode" TYPE TEXT;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "result" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "result" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "result" TYPE JSON;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" DROP NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "qualityScore" TYPE INTEGER;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "processingTime" DROP NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "processingTime" SET DEFAULT 0;ALTER TABLE "Analyses" ALTER COLUMN "processingTime" TYPE INTEGER;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "Analyses" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'Analyses' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Executing (default): SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'notes'
+Executing (default): SELECT pk.constraint_type as "Constraint",c.column_name as "Field", c.column_default as "Default",c.is_nullable as "Null", (CASE WHEN c.udt_name = 'hstore' THEN c.udt_name ELSE c.data_type END) || (CASE WHEN c.character_maximum_length IS NOT NULL THEN '(' || c.character_maximum_length || ')' ELSE '' END) as "Type", (SELECT array_agg(e.enumlabel) FROM pg_catalog.pg_type t JOIN pg_catalog.pg_enum e ON t.oid=e.enumtypid WHERE t.typname=c.udt_name) AS "special", (SELECT pgd.description FROM pg_catalog.pg_statio_all_tables AS st INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid) WHERE c.ordinal_position=pgd.objsubid AND c.table_name=st.relname) AS "Comment" FROM information_schema.columns c LEFT JOIN (SELECT tc.table_schema, tc.table_name, cu.column_name, tc.constraint_type FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE  cu ON tc.table_schema=cu.table_schema and tc.table_name=cu.table_name and tc.constraint_name=cu.constraint_name and tc.constraint_type='PRIMARY KEY') pk ON pk.table_schema=c.table_schema AND pk.table_name=c.table_name AND pk.column_name=c.column_name WHERE c.table_name = 'notes' AND c.table_schema = 'public'
+Executing (default): SELECT DISTINCT tc.constraint_name as constraint_name, tc.constraint_schema as constraint_schema, tc.constraint_catalog as constraint_catalog, tc.table_name as table_name,tc.table_schema as table_schema,tc.table_catalog as table_catalog,tc.initially_deferred as initially_deferred,tc.is_deferrable as is_deferrable,kcu.column_name as column_name,ccu.table_schema  AS referenced_table_schema,ccu.table_catalog  AS referenced_table_catalog,ccu.table_name  AS referenced_table_name,ccu.column_name AS referenced_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = 'notes' AND tc.table_catalog = 'neondb'
+Executing (default): ALTER TABLE "notes" DROP CONSTRAINT "notes_userId_fkey"
+Executing (default): ALTER TABLE "notes" DROP CONSTRAINT "notes_userId_fkey"
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "userId" SET NOT NULL;ALTER TABLE "notes"  ADD FOREIGN KEY ("userId") REFERENCES "Users" ("id");
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "title" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "title" SET DEFAULT 'Untitled Note';ALTER TABLE "notes" ALTER COLUMN "title" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "content" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "content" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "content" TYPE TEXT;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "tags" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "tags" SET DEFAULT '[]';ALTER TABLE "notes" ALTER COLUMN "tags" TYPE JSON;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "color" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "color" SET DEFAULT 'default';ALTER TABLE "notes" ALTER COLUMN "color" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "isPinned" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "isPinned" SET DEFAULT false;ALTER TABLE "notes" ALTER COLUMN "isPinned" TYPE BOOLEAN;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "folder" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "folder" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "folder" TYPE VARCHAR(255);
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "lastModified" DROP NOT NULL;ALTER TABLE "notes" ALTER COLUMN "lastModified" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "lastModified" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "createdAt" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "createdAt" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "createdAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): ALTER TABLE "notes" ALTER COLUMN "updatedAt" SET NOT NULL;ALTER TABLE "notes" ALTER COLUMN "updatedAt" DROP DEFAULT;ALTER TABLE "notes" ALTER COLUMN "updatedAt" TYPE TIMESTAMP WITH TIME ZONE;
+Executing (default): SELECT i.relname AS name, ix.indisprimary AS primary, ix.indisunique AS unique, ix.indkey AS indkey, array_agg(a.attnum) as column_indexes, array_agg(a.attname) AS column_names, pg_get_indexdef(ix.indexrelid) AS definition FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND t.relkind = 'r' and t.relname = 'notes' GROUP BY i.relname, ix.indexrelid, ix.indisprimary, ix.indisunique, ix.indkey ORDER BY i.relname;
+Database synchronized
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
 
-API Key exists: true
-Prompt: You are a code analysis expert. Analyze this javascript code:
-
-```javascript
-// Sample data
-const customers = [
-  { customer_id: 1, name: "Alice", city: "Delhi" },
-  { customer_id: 2, name: "Bob", city: "Mumbai" },
-  { customer_id: 3, name: "Charlie", city: "Bangalore" }
-];
-
-const orders = [
-  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },
-  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },
-  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }
-];
-
-// Find customers with at least one order
-const customersWithOrders = customers.filter(c =>
-  orders.some(o => o.customer_id === c.customer_id)
-);
-
-// Print results
-customersWithOrders.forEach(c => {
-  console.log(`Customer: ${c.name} (${c.city})`);
-  orders
-    .filter(o => o.customer_id === c.customer_id)
-    .forEach(o => {
-      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);
-    });
-});
-
-```
-
-You are a strict code reviewer. Analyze this code thoroughly and find ALL issues:
-
-1. SYNTAX ERRORS: Missing semicolons, brackets, quotes, etc.
-2. LOGIC ERRORS: Infinite loops, wrong conditions, unreachable code
-3. RUNTIME ERRORS: Undefined variables, null references, type errors
-4. BEST PRACTICES: Poor naming, missing error handling, code smells
-5. SECURITY ISSUES: Injection vulnerabilities, unsafe operations
-
-Be critical! Even simple code can have issues. Rate harshly if problems exist.
-
-If code has ANY errors or issues, score should be 60 or below.
-If code is perfect, score can be 80-95.
-
-Return ONLY this JSON (no markdown, no extra text):
-{
-  "qualityScore": 45,
-  "issues": [
-    {"line": 1, "severity": "high", "message": "Specific issue found", "suggestion": "Specific fix needed"}
-  ],
-  "summary": "Detailed summary of all problems found"
+Error: listen EADDRINUSE: address already in use :::3001
+    at Server.setupListenHandle [as _listen2] (node:net:1939:16)
+    at listenInCluster (node:net:1996:12)
+    at Server.listen (node:net:2101:7)
+    at Function.listen (/Users/polana.rakshita2024nstrishihood.edu.in/Documents/AI_CODE_REVIEW/backend/node_modules/express/lib/application.js:635:24)
+    at startServer (file:///Users/polana.rakshita2024nstrishihood.edu.in/Documents/AI_CODE_REVIEW/backend/server.js:556:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1975:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
 }
-Calling Gemini AI...
-Raw AI Response: ```json
-{
-  "qualityScore": 60,
-  "issues": [
-    {
-      "line": 18,
-      "severity": "medium",
-      "message": "Inefficient nested loop",
-      "suggestion": "Use a Map or object to improve lookup time from O(n^2) to O(n). Create a map of customer_id to orders to avoid nested iteration."
-    },
-    {
-      "line": 20,
-      "severity": "low",
-      "message": "Poor variable name",
-      "suggestion": "Use more descriptive variable names like `customersWithOrders` instead of `customersWithOrders` (Although this is already used, better descriptive naming should be used throughout)"
-    },
-    {
-      "line": 27,
-      "severity": "low",
-      "message": "Missing error handling",
-      "suggestion": "Consider adding error handling for cases where the data might be malformed or missing (e.g., missing `customer_id` in orders)."
-    },
-    {
-      "line": 20,
-      "severity": "low",
-      "message": "Could use template literals for better readability in the console output",
-      "suggestion": "Use template literals for clearer formatting and improved readability (This is already being done, but better consistency could be applied)."
-    },
-    {
-      "line": 1,
-      "severity": "low",
-      "message": "Lack of comments explaining the purpose of the code",
-      "suggestion": "Add comments to explain the purpose of each section of code and the logic behind the operations. This will make the code more understandable and maintainable."
-    }
-  ],
-  "summary": "The code functions correctly but has inefficiencies and lacks robust error handling and descriptive variable naming.  The nested loop in the `forEach` functions causes a performance issue.  While there are no syntax errors or critical runtime problems, the lack of comments and potential for data issues should be addressed to improve overall quality. The use of a map would resolve the performance issue. Better descriptive variable names would improve readability. Adding error handling would make it more robust. More thorough comments would enhance maintainability."
-}
-```
 
-Extracted JSON string: {
-  "qualityScore": 60,
-  "issues": [
-    {
-      "line": 18,
-      "severity": "medium",
-      "message": "Inefficient nested loop",
-      "suggestion": "Use a Map or object to improve lookup time from O(n^2) to O(n). Create a map of customer_id to orders to avoid nested iteration."
-    },
-    {
-      "line": 20,
-      "severity": "low",
-      "message": "Poor variable name",
-      "suggestion": "Use more descriptive variable names like `customersWithOrders` instead of `customersWithOrders` (Although this is already used, better descriptive naming should be used throughout)"
-    },
-    {
-      "line": 27,
-      "severity": "low",
-      "message": "Missing error handling",
-      "suggestion": "Consider adding error handling for cases where the data might be malformed or missing (e.g., missing `customer_id` in orders)."
-    },
-    {
-      "line": 20,
-      "severity": "low",
-      "message": "Could use template literals for better readability in the console output",
-      "suggestion": "Use template literals for clearer formatting and improved readability (This is already being done, but better consistency could be applied)."
-    },
-    {
-      "line": 1,
-      "severity": "low",
-      "message": "Lack of comments explaining the purpose of the code",
-      "suggestion": "Add comments to explain the purpose of each section of code and the logic behind the operations. This will make the code more understandable and maintainable."
-    }
-  ],
-  "summary": "The code functions correctly but has inefficiencies and lacks robust error handling and descriptive variable naming.  The nested loop in the `forEach` functions causes a performance issue.  While there are no syntax errors or critical runtime problems, the lack of comments and potential for data issues should be addressed to improve overall quality. The use of a map would resolve the performance issue. Better descriptive variable names would improve readability. Adding error handling would make it more robust. More thorough comments would enhance maintainability."
-}
-✅ Successfully parsed AI response: {
-  qualityScore: 60,
-  issues: [
-    {
-      line: 18,
-      severity: 'medium',
-      message: 'Inefficient nested loop',
-      suggestion: 'Use a Map or object to improve lookup time from O(n^2) to O(n). Create a map of customer_id to orders to avoid nested iteration.'
-    },
-    {
-      line: 20,
-      severity: 'low',
-      message: 'Poor variable name',
-      suggestion: 'Use more descriptive variable names like `customersWithOrders` instead of `customersWithOrders` (Although this is already used, better descriptive naming should be used throughout)'
-    },
-    {
-      line: 27,
-      severity: 'low',
-      message: 'Missing error handling',
-      suggestion: 'Consider adding error handling for cases where the data might be malformed or missing (e.g., missing `customer_id` in orders).'
-    },
-    {
-      line: 20,
-      severity: 'low',
-      message: 'Could use template literals for better readability in the console output',
-      suggestion: 'Use template literals for clearer formatting and improved readability (This is already being done, but better consistency could be applied).'
-    },
-    {
-      line: 1,
-      severity: 'low',
-      message: 'Lack of comments explaining the purpose of the code',
-      suggestion: 'Add comments to explain the purpose of each section of code and the logic behind the operations. This will make the code more understandable and maintainable.'
-    }
-  ],
-  summary: 'The code functions correctly but has inefficiencies and lacks robust error handling and descriptive variable naming.  The nested loop in the `forEach` functions causes a performance issue.  While there are no syntax errors or critical runtime problems, the lack of comments and potential for data issues should be addressed to improve overall quality. The use of a map would resolve the performance issue. Better descriptive variable names would improve readability. Adding error handling would make it more robust. More thorough comments would enhance maintainability.'
-}
-=== AI ANALYSIS SUCCESS ===
-
-✅ Saved review analysis to history for user 035396ce-0bb4-40c2-89f0-09a721b47f82
-Language: input='javascript' -> detected='javascript'
-
-=== AI ANALYSIS START ===
-Type: debug
-Language: javascript
-Code: // Sample data
-const customers = [
-  { customer_id: 1, name: "Alice", city: "Delhi" },
-  { customer_id: 2, name: "Bob", city: "Mumbai" },
-  { customer_id: 3, name: "Charlie", city: "Bangalore" }
-];
-
-const orders = [
-  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },
-  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },
-  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }
-];
-
-// Find customers with at least one order
-const customersWithOrders = customers.filter(c =>
-  orders.some(o => o.customer_id === c.customer_id)
-);
-
-// Print results
-customersWithOrders.forEach(c => {
-  console.log(`Customer: ${c.name} (${c.city})`);
-  orders
-    .filter(o => o.customer_id === c.customer_id)
-    .forEach(o => {
-      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);
-    });
-});
-
-API Key exists: true
-Prompt: You are a code analysis expert. Analyze this javascript code:
-
-```javascript
-// Sample data
-const customers = [
-  { customer_id: 1, name: "Alice", city: "Delhi" },
-  { customer_id: 2, name: "Bob", city: "Mumbai" },
-  { customer_id: 3, name: "Charlie", city: "Bangalore" }
-];
-
-const orders = [
-  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },
-  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },
-  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }
-];
-
-// Find customers with at least one order
-const customersWithOrders = customers.filter(c =>
-  orders.some(o => o.customer_id === c.customer_id)
-);
-
-// Print results
-customersWithOrders.forEach(c => {
-  console.log(`Customer: ${c.name} (${c.city})`);
-  orders
-    .filter(o => o.customer_id === c.customer_id)
-    .forEach(o => {
-      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);
-    });
-});
-
-```
-
-You are a debugging expert. This code has bugs - find them ALL and fix them!
-
-Look for:
-- SYNTAX ERRORS: Missing semicolons, brackets, quotes, incomplete statements
-- LOGIC ERRORS: Wrong operators (= vs ==), infinite loops, wrong conditions
-- RUNTIME ERRORS: Undefined variables, null references, type mismatches
-- MISSING CODE: Incomplete functions, missing return statements
-
-For the given code, identify EVERY bug and provide the corrected version.
-
-Return ONLY this JSON format (no markdown, no extra text):
-{
-  "bugs": [
-    {"line": 1, "issue": "Syntax error: incomplete variable declaration", "fix": "Complete the variable assignment: let x = 'hello';"},
-    {"line": 2, "issue": "ReferenceError: x might be undefined", "fix": "Add null check before using x.length"},
-    {"line": 3, "issue": "Logic error: assignment (=) instead of comparison (===)", "fix": "Change 'if (x = 5)' to 'if (x === 5)'"}
-  ],
-  "fixedCode": "let x = 'hello';
-if (x) {
-  console.log(x.length);
-}
-if (x === 5) {
-  console.log('correct');
-}",
-  "explanation": "Fixed syntax error in variable declaration, added null check, and corrected assignment operator to comparison operator."
-}
-Calling Gemini AI...
-Raw AI Response: ```json
-{
-  "bugs": [],
-  "fixedCode": "// Sample data\nconst customers = [\n  { customer_id: 1, name: \"Alice\", city: \"Delhi\" },\n  { customer_id: 2, name: \"Bob\", city: \"Mumbai\" },\n  { customer_id: 3, name: \"Charlie\", city: \"Bangalore\" }\n];\n\nconst orders = [\n  { order_id: 101, customer_id: 1, order_date: \"2025-09-10\" },\n  { order_id: 102, customer_id: 1, order_date: \"2025-09-12\" },\n  { order_id: 103, customer_id: 2, order_date: \"2025-09-15\" }\n];\n\n// Find customers with at least one order\nconst customersWithOrders = customers.filter(c =>\n  orders.some(o => o.customer_id === c.customer_id)\n);\n\n// Print results\ncustomersWithOrders.forEach(c => {\n  console.log(`Customer: ${c.name} (${c.city})`);\n  orders\n    .filter(o => o.customer_id === c.customer_id)\n    .forEach(o => {\n      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);\n    });\n});",
-  "explanation": "The original code contains no bugs.  It correctly identifies and displays customers with orders and their corresponding order details. No changes were needed."
-}
-```
-
-Extracted JSON string: {
-  "bugs": [],
-  "fixedCode": "// Sample data\nconst customers = [\n  { customer_id: 1, name: \"Alice\", city: \"Delhi\" },\n  { customer_id: 2, name: \"Bob\", city: \"Mumbai\" },\n  { customer_id: 3, name: \"Charlie\", city: \"Bangalore\" }\n];\n\nconst orders = [\n  { order_id: 101, customer_id: 1, order_date: \"2025-09-10\" },\n  { order_id: 102, customer_id: 1, order_date: \"2025-09-12\" },\n  { order_id: 103, customer_id: 2, order_date: \"2025-09-15\" }\n];\n\n// Find customers with at least one order\nconst customersWithOrders = customers.filter(c =>\n  orders.some(o => o.customer_id === c.customer_id)\n);\n\n// Print results\ncustomersWithOrders.forEach(c => {\n  console.log(`Customer: ${c.name} (${c.city})`);\n  orders\n    .filter(o => o.customer_id === c.customer_id)\n    .forEach(o => {\n      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);\n    });\n});",
-  "explanation": "The original code contains no bugs.  It correctly identifies and displays customers with orders and their corresponding order details. No changes were needed."
-}
-✅ Successfully parsed AI response: {
-  bugs: [],
-  fixedCode: '// Sample data\n' +
-    'const customers = [\n' +
-    '  { customer_id: 1, name: "Alice", city: "Delhi" },\n' +
-    '  { customer_id: 2, name: "Bob", city: "Mumbai" },\n' +
-    '  { customer_id: 3, name: "Charlie", city: "Bangalore" }\n' +
-    '];\n' +
-    '\n' +
-    'const orders = [\n' +
-    '  { order_id: 101, customer_id: 1, order_date: "2025-09-10" },\n' +
-    '  { order_id: 102, customer_id: 1, order_date: "2025-09-12" },\n' +
-    '  { order_id: 103, customer_id: 2, order_date: "2025-09-15" }\n' +
-    '];\n' +
-    '\n' +
-    '// Find customers with at least one order\n' +
-    'const customersWithOrders = customers.filter(c =>\n' +
-    '  orders.some(o => o.customer_id === c.customer_id)\n' +
-    ');\n' +
-    '\n' +
-    '// Print results\n' +
-    'customersWithOrders.forEach(c => {\n' +
-    '  console.log(`Customer: ${c.name} (${c.city})`);\n' +
-    '  orders\n' +
-    '    .filter(o => o.customer_id === c.customer_id)\n' +
-    '    .forEach(o => {\n' +
-    '      console.log(`   Order ID: ${o.order_id}, Date: ${o.order_date}`);\n' +
-    '    });\n' +
-    '});',
-  explanation: 'The original code contains no bugs.  It correctly identifies and displays customers with orders and their corresponding order details. No changes were needed.'
-}
-=== AI ANALYSIS SUCCESS ===
-
-✅ Saved debug analysis to history for user 035396ce-0bb4-40c2-89f0-09a721b47f82
+Node.js v22.16.0
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m

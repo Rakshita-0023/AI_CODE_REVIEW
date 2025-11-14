@@ -8,6 +8,13 @@ const User = sequelize.define('User', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
+  fullName: {
+    type: DataTypes.STRING,
+    allowNull: true, // Allow null for existing users
+    validate: {
+      len: [2, 100],
+    },
+  },
   username: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -22,6 +29,14 @@ const User = sequelize.define('User', {
     unique: true,
     validate: {
       isEmail: true,
+    },
+  },
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: true, // Allow null for existing users
+    unique: true,
+    validate: {
+      is: /^\+91[6-9]\d{9}$/,
     },
   },
   password: {
