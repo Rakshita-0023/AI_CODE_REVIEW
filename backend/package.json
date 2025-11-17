@@ -1,5 +1,5 @@
 {
-  "name": "ai-code-reviewer-backend",
+  "name": "codesenseai-backend",
   "version": "1.0.0",
   "main": "server.js",
   "type": "module",
@@ -16,7 +16,7 @@
   ],
   "author": "",
   "license": "ISC",
-  "description": "AI-Powered Code Reviewer Backend",
+  "description": "CodeSenseAI Backend",
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",
     "@getbrevo/brevo": "^3.0.1",
