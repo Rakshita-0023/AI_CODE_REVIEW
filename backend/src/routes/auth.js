@@ -72,8 +72,25 @@ router.post('/register', async (req, res) => {
       user: user.toJSON(),
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    console.error('Registration error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      sql: error.sql,
+      original: error.original
+    });
+    
+    // Return specific error message
+    if (error.name === 'SequelizeValidationError') {
+      const validationErrors = error.errors.map(err => err.message);
+      return res.status(400).json({ error: `Validation error: ${validationErrors.join(', ')}` });
+    }
+    
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ error: 'Email, username, or phone already exists' });
+    }
+    
+    res.status(500).json({ error: `Registration failed: ${error.message}` });
   }
 });
 

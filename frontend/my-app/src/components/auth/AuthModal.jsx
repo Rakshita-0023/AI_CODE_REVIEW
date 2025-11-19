@@ -6,9 +6,12 @@ import { authAPI } from '../../services/api';
 const AuthModal = ({ isOpen, onClose, mode = 'login' }) => {
   const [currentMode, setCurrentMode] = useState(mode);
   const [formData, setFormData] = useState({
+    fullName: '',
     username: '',
     email: '',
-    password: ''
+    phone: '',
+    password: '',
+    confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,7 +29,7 @@ const AuthModal = ({ isOpen, onClose, mode = 'login' }) => {
       if (currentMode === 'login') {
         response = await authAPI.login(formData.email, formData.password);
       } else {
-        response = await authAPI.register(formData.username, formData.email, formData.password);
+        response = await authAPI.register(formData);
       }
 
       // Store token in localStorage
@@ -39,7 +42,7 @@ const AuthModal = ({ isOpen, onClose, mode = 'login' }) => {
       // Close modal after short delay
       setTimeout(() => {
         onClose();
-        setFormData({ username: '', email: '', password: '' });
+        setFormData({ fullName: '', username: '', email: '', phone: '', password: '', confirmPassword: '' });
         setSuccessMessage('');
       }, 1500);
       
@@ -97,18 +100,45 @@ const AuthModal = ({ isOpen, onClose, mode = 'login' }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {currentMode === 'register' && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Username</label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-                className="input w-full"
-                placeholder="Enter your username"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-1">Full Name</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                  className="input w-full"
+                  placeholder="Enter your full name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  required
+                  className="input w-full"
+                  placeholder="Enter your username"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="input w-full"
+                  placeholder="+91XXXXXXXXXX"
+                  pattern="\+91[6-9]\d{9}"
+                />
+              </div>
+            </>
           )}
 
           <div>
@@ -137,6 +167,22 @@ const AuthModal = ({ isOpen, onClose, mode = 'login' }) => {
               minLength="6"
             />
           </div>
+
+          {currentMode === 'register' && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Confirm Password</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                className="input w-full"
+                placeholder="Confirm your password"
+                minLength="6"
+              />
+            </div>
+          )}
 
           <button
             type="submit"
