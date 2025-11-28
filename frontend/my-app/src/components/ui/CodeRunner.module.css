@@ -8,54 +8,8 @@
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.title {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.runButton {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.runButton:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.runButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.runIcon {
-  width: 1rem;
-  height: 1rem;
-}
-
-.spinner {
-  width: 0.75rem;
-  height: 0.75rem;
-  border: 2px solid white;
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  display: none;
+  /* Hide header as run button is moved */
 }
 
 .inputGrid {
@@ -92,9 +46,12 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   font-size: 0.75rem;
-  height: 2rem;
-  resize: none;
+  min-height: 2.5rem;
+  /* Increased height */
+  resize: vertical;
+  /* Allow vertical resizing */
   transition: all 0.3s ease;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .input:focus {
@@ -179,7 +136,8 @@
   border-radius: 0.5rem;
   font-size: 0.75rem;
   overflow: auto;
-  max-height: 4rem;
+  max-height: 8rem;
+  /* Increased max height */
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -206,13 +164,8 @@
   .inputGrid {
     grid-template-columns: 1fr;
   }
-  
+
   .container {
     padding: 0.5rem;
-  }
-  
-  .runButton {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
   }
 }

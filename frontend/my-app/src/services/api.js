@@ -42,11 +42,11 @@ export const authAPI = {
 };
 
 export const aiAPI = {
-  reviewCode: (data) => api.post('/ai/review', data),
-  debugCode: (data) => api.post('/ai/debug', data),
-  getApproaches: (data) => api.post('/ai/approaches', data),
-  optimizeCode: (data) => api.post('/ai/optimize', data),
-  chat: (message) => api.post('/ai/chat', { message }),
+  reviewCode: (data) => axios.post('/.netlify/functions/analyze', { ...data, type: 'review' }),
+  debugCode: (data) => axios.post('/.netlify/functions/analyze', { ...data, type: 'debug' }),
+  getApproaches: (data) => axios.post('/.netlify/functions/analyze', { ...data, type: 'approaches' }),
+  optimizeCode: (data) => axios.post('/.netlify/functions/analyze', { ...data, type: 'optimize' }),
+  chat: (message) => api.post('/ai/chat', { message }), // Keep chat on backend for now if it requires history
 };
 
 export const executeAPI = {

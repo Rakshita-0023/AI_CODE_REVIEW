@@ -1,6 +1,8 @@
 import { Editor } from '@monaco-editor/react';
+import { PlayIcon } from '@heroicons/react/24/solid';
 import useStore from '../../store/useStore';
 import GlassmorphicDropdown from './GlassmorphicDropdown';
+import ActionButtons from './ActionButtons';
 import styles from './CodeEditor.module.css';
 
 const LANGUAGE_OPTIONS = [
@@ -30,9 +32,11 @@ const CodeEditor = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>
-          Code Editor
-        </h3>
+        <div className={styles.headerLeft}>
+          <h3 className={styles.title}>Code Editor</h3>
+          <div className={styles.divider} />
+          <ActionButtons />
+        </div>
         <div className={styles.controls}>
           <GlassmorphicDropdown
             value={language}
@@ -40,9 +44,17 @@ const CodeEditor = () => {
             options={LANGUAGE_OPTIONS}
             placeholder="Select Language"
           />
+          <button
+            className={styles.runButton}
+            onClick={() => document.dispatchEvent(new CustomEvent('runCode'))}
+            title="Run Code (Ctrl+Enter)"
+          >
+            <PlayIcon className={styles.runIcon} />
+            <span className={styles.runText}>Run</span>
+          </button>
         </div>
       </div>
-      
+
       <div className={styles.editorWrapper}>
         <Editor
           height="100%"
@@ -65,7 +77,7 @@ const CodeEditor = () => {
           }}
         />
       </div>
-      
+
       <div className={styles.statsContainer}>
         <div className={styles.stat}>
           <span>Lines: {code.split('\n').length}</span>

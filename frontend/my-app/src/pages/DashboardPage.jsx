@@ -26,13 +26,13 @@ const DashboardPage = () => {
         <div className={styles.backgroundGradient}></div>
         <div className={styles.backgroundRadial}></div>
       </div>
-      
+
       {/* Light Theme Background */}
       <div className={styles.lightBackground}></div>
-      
+
       <div className={styles.content}>
         <DashboardHeader />
-        
+
         <div className={styles.mainLayout}>
           <SplitPane
             defaultSplit={70}
@@ -44,15 +44,12 @@ const DashboardPage = () => {
                 <div className={styles.editorSection}>
                   <CodeEditor />
                 </div>
-                <div className={styles.actionSection}>
-                  <ActionButtons />
-                </div>
               </div>
             }
             rightPane={
               <div className={styles.rightPane}>
                 <div className={styles.resultsSection}>
-                  <ResultsPanel 
+                  <ResultsPanel
                     onShowHistory={() => setShowHistory(true)}
                     onShowNotes={() => setShowNotes(true)}
                   />
@@ -64,7 +61,7 @@ const DashboardPage = () => {
             }
           />
         </div>
-        
+
         {/* AI Chat Button - Fixed Position */}
         <button
           type="button"
@@ -77,10 +74,10 @@ const DashboardPage = () => {
 
         {/* AI Chat Modal */}
         {showAIChat && <AIChat isOpen={showAIChat} onClose={() => setShowAIChat(false)} />}
-        
+
         {/* History Panel */}
         <HistoryPanel isOpen={showHistory} onClose={() => setShowHistory(false)} />
-        
+
         {/* Notes Panel */}
         <NotesPanel isOpen={showNotes} onClose={() => setShowNotes(false)} />
       </div>

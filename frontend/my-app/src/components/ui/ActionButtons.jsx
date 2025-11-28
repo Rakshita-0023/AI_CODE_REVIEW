@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { 
+import {
   DocumentMagnifyingGlassIcon,
   BugAntIcon,
   LightBulbIcon,
@@ -11,13 +11,13 @@ import toast from 'react-hot-toast';
 import styles from './ActionButtons.module.css';
 
 const ActionButtons = () => {
-  const { 
-    code, 
-    language, 
-    setCurrentAnalysis, 
-    addToHistory, 
-    isAnalyzing, 
-    setIsAnalyzing 
+  const {
+    code,
+    language,
+    setCurrentAnalysis,
+    addToHistory,
+    isAnalyzing,
+    setIsAnalyzing
   } = useStore();
 
   const handleAnalysis = async (type) => {
@@ -30,7 +30,7 @@ const ActionButtons = () => {
     setCurrentAnalysis(null);
     setIsAnalyzing(true);
     console.log(`Starting ${type} analysis with:`, { code, language });
-    
+
     try {
       let response;
       const payload = { code, language };
@@ -52,7 +52,7 @@ const ActionButtons = () => {
         default:
           throw new Error('Invalid analysis type');
       }
-      
+
       console.log(`${type} API response:`, response);
 
       const analysis = {
@@ -111,7 +111,7 @@ const ActionButtons = () => {
       <h3 className={styles.title}>
         AI Analysis
       </h3>
-      
+
       <div className={styles.buttonGrid}>
         {buttons.map((button) => {
           const Icon = button.icon;
@@ -135,10 +135,10 @@ const ActionButtons = () => {
           );
         })}
       </div>
-      
+
       {!code.trim() && (
         <div className={styles.emptyState}>
-          Enter code in the editor to enable analysis tools
+          {/* Empty state hidden in toolbar mode via CSS, but keeping structure if needed later */}
         </div>
       )}
     </div>
