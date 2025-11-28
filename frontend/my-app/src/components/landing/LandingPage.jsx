@@ -110,9 +110,11 @@ const LandingPage = () => {
       <nav className="relative z-50 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CS</span>
-            </div>
+            <img 
+              src="/logo_ai.png" 
+              alt="CodeSense AI Logo" 
+              className="w-8 h-8 rounded-lg"
+            />
             <span className="text-xl font-bold">CodeSense</span>
           </div>
           

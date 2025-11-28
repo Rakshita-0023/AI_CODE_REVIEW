@@ -50,9 +50,11 @@ const Header = () => {
           </button>
           
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CS</span>
-            </div>
+            <img 
+              src="/logo_ai.png" 
+              alt="CodeSense AI Logo" 
+              className="w-8 h-8 rounded-lg"
+            />
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               CodeSense
             </h1>

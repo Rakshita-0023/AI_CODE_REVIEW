@@ -35,9 +35,11 @@ const DashboardHeader = () => {
       <div className={styles.container}>
         <div className={styles.leftSection}>
           <div className={styles.logo}>
-            <div className={styles.logoIcon}>
-              <span className="text-white font-bold text-sm">CS</span>
-            </div>
+            <img 
+              src="/logo_ai.png" 
+              alt="CodeSense AI Logo" 
+              className="w-8 h-8 rounded-lg"
+            />
             <h1 className={styles.logoText}>
               CodeSense
             </h1>

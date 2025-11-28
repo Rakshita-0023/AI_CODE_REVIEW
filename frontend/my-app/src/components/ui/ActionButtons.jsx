@@ -67,119 +67,13 @@ const ActionButtons = () => {
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} completed!`);
     } catch (error) {
       console.error('Analysis error:', error);
-      
-      // Always use fallback for consistent behavior
-      const fallbackAnalysis = generateFallbackAnalysis(type, code, language);
-      setCurrentAnalysis(fallbackAnalysis);
-      addToHistory(fallbackAnalysis);
-      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} completed!`);
+      toast.error(`${type.charAt(0).toUpperCase() + type.slice(1)} failed. Please try again.`);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const generateFallbackAnalysis = (type, code, language) => {
-    const timestamp = new Date().toISOString();
-    
-    switch (type) {
-      case 'review':
-        return {
-          type: 'review',
-          timestamp,
-          originalCode: code,
-          language,
-          qualityScore: 75,
-          issues: [
-            {
-              line: 1,
-              severity: 'medium',
-              message: 'Consider adding comments for better code documentation',
-              suggestion: 'Add descriptive comments to explain complex logic'
-            },
-            {
-              line: 2,
-              severity: 'low',
-              message: 'Variable naming could be more descriptive',
-              suggestion: 'Use meaningful variable names that describe their purpose'
-            }
-          ],
-          summary: 'Code structure looks good overall. Consider improving documentation and variable naming for better maintainability.'
-        };
-        
-      case 'debug':
-        return {
-          type: 'debug',
-          timestamp,
-          originalCode: code,
-          language,
-          issues: [
-            {
-              line: 1,
-              severity: 'medium',
-              message: 'Potential undefined variable access',
-              suggestion: 'Add null/undefined checks before accessing variables'
-            }
-          ],
-          fixedCode: `// Fixed version with error handling\n${code}\n\n// Added error handling and validation`,
-          summary: 'Code appears functional. Added error handling for robustness and null checks for variables.'
-        };
-        
-      case 'approaches':
-        return {
-          type: 'approaches',
-          timestamp,
-          originalCode: code,
-          language,
-          alternatives: [
-            {
-              approach: 'Functional Programming Style',
-              code: `// Functional approach\nconst processData = (data) => {\n  return data\n    .filter(item => item.isValid)\n    .map(item => transform(item))\n    .reduce((acc, item) => acc + item.value, 0);\n};`,
-              pros: ['Immutable data', 'Pure functions', 'Predictable behavior', 'Easy to test'],
-              cons: ['Learning curve', 'More verbose', 'Performance overhead']
-            },
-            {
-              approach: 'Object-Oriented Style',
-              code: `// OOP approach\nclass DataProcessor {\n  constructor(data) {\n    this.data = data;\n  }\n  \n  process() {\n    return this.filter().transform().aggregate();\n  }\n}`,
-              pros: ['Encapsulation', 'Reusable', 'Well organized', 'Inheritance support'],
-              cons: ['More complex', 'Memory overhead', 'Tight coupling']
-            }
-          ],
-          summary: 'Multiple programming paradigms can be applied to solve this problem. Each approach has its own benefits and trade-offs.'
-        };
-        
-      case 'optimize':
-        return {
-          type: 'optimize',
-          timestamp,
-          originalCode: code,
-          language,
-          optimizations: [
-            {
-              type: 'Performance Optimization',
-              description: 'Implement caching mechanism for repeated calculations and use efficient algorithms',
-              optimizedCode: `// Optimized version with caching\nconst cache = new Map();\n\nfunction optimizedFunction(input) {\n  if (cache.has(input)) {\n    return cache.get(input);\n  }\n  \n  const result = expensiveCalculation(input);\n  cache.set(input, result);\n  return result;\n}`,
-              improvement: 'Up to 60% performance improvement for repeated operations'
-            },
-            {
-              type: 'Memory Optimization',
-              description: 'Use more efficient data structures and reduce memory allocations',
-              optimizedCode: `// Memory efficient version\nconst processLargeDataset = (data) => {\n  // Use generators for memory efficiency\n  function* processChunks(data, chunkSize = 1000) {\n    for (let i = 0; i < data.length; i += chunkSize) {\n      yield data.slice(i, i + chunkSize);\n    }\n  }\n  \n  return processChunks(data);\n};`,
-              improvement: 'Reduces memory usage by 40-50% for large datasets'
-            }
-          ],
-          summary: 'Code can be optimized for better performance and memory usage through caching and efficient data structures.'
-        };
-        
-      default:
-        return {
-          type,
-          timestamp,
-          originalCode: code,
-          language,
-          message: 'Analysis completed'
-        };
-    }
-  };
+
 
   const buttons = [
     {

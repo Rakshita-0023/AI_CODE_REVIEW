@@ -13,13 +13,31 @@ const ProfileModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Profile</h2>
+    <div 
+      className="fixed top-20 left-0 right-0 bottom-0 flex items-start justify-center z-[9999] p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="card w-full max-w-md transform transition-all duration-300 scale-100"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border-color)',
+          boxShadow: 'var(--shadow-large)'
+        }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>Profile</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+            className="p-2 rounded-lg transition-colors"
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--text-secondary)'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-tertiary)'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -27,28 +45,49 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Username
             </label>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div 
+              className="p-3 rounded-lg"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)'
+              }}
+            >
               {user?.username || 'Not available'}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Email
             </label>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div 
+              className="p-3 rounded-lg"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)'
+              }}
+            >
               {user?.email || 'Not available'}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Member Since
             </label>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div 
+              className="p-3 rounded-lg"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)'
+              }}
+            >
               {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Recently joined'}
             </div>
           </div>
@@ -56,13 +95,22 @@ const ProfileModal = ({ isOpen, onClose }) => {
           <div className="flex space-x-3 pt-4">
             <button
               onClick={handleLogout}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:scale-105"
+              style={{
+                backgroundColor: 'var(--error)',
+                color: 'white'
+              }}
             >
               Sign Out
             </button>
             <button
               onClick={onClose}
-              className="flex-1 btn-secondary"
+              className="btn flex-1"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)'
+              }}
             >
               Close
             </button>
