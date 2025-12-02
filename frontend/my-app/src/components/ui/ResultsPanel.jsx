@@ -19,6 +19,10 @@ import styles from './ResultsPanel.module.css';
 const ResultsPanel = ({ onShowHistory, onShowNotes }) => {
   const { currentAnalysis, theme, isAnalyzing } = useStore();
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Debug logging
+  console.log('ResultsPanel render - currentAnalysis:', currentAnalysis);
+  console.log('ResultsPanel render - isAnalyzing:', isAnalyzing);
 
   // Reset to overview tab when analysis starts
   useEffect(() => {
@@ -84,38 +88,40 @@ const ResultsPanel = ({ onShowHistory, onShowNotes }) => {
     );
   }
 
-  return (
-    <div className="h-full flex flex-col">
-      {renderHeader()}
-      <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 transition-opacity duration-500 ease-in-out p-6">
-        <div className="text-center max-w-md">
-          <DocumentMagnifyingGlassIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <h3 className="text-xl font-semibold mb-2">Ready to Analyze</h3>
-          <p className="text-sm mb-6">
-            Enter your code in the editor and use the toolbar above to:
-          </p>
-          <ul className="text-left text-sm space-y-2 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-              Review code quality and best practices
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500"></span>
-              Debug errors and find logical bugs
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              Optimize performance and efficiency
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              Explore alternative implementation approaches
-            </li>
-          </ul>
+  if (!currentAnalysis) {
+    return (
+      <div className="h-full flex flex-col">
+        {renderHeader()}
+        <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 transition-opacity duration-500 ease-in-out p-6">
+          <div className="text-center max-w-md">
+            <DocumentMagnifyingGlassIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <h3 className="text-xl font-semibold mb-2">Ready to Analyze</h3>
+            <p className="text-sm mb-6">
+              Enter your code in the editor and use the toolbar above to:
+            </p>
+            <ul className="text-left text-sm space-y-2 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                Review code quality and best practices
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                Debug errors and find logical bugs
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                Optimize performance and efficiency
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                Explore alternative implementation approaches
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);

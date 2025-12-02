@@ -41,12 +41,22 @@ export const authAPI = {
   resetPassword: (data) => api.post('/auth/reset-password', data),
 };
 
+// Helper to try Netlify function first, fallback to backend
+const tryWithFallback = async (netlifyPath, backendPath, data) => {
+  try {
+    return await api.post(netlifyPath, data);
+  } catch (error) {
+    console.warn(`Netlify function failed, falling back to backend: ${error.message}`);
+    return await api.post(backendPath, data);
+  }
+};
+
 export const aiAPI = {
-  reviewCode: (data) => axios.post('/.netlify/functions/analyze', { ...data, type: 'review' }),
-  debugCode: (data) => axios.post('/.netlify/functions/analyze', { ...data, type: 'debug' }),
-  getApproaches: (data) => axios.post('/.netlify/functions/analyze', { ...data, type: 'approaches' }),
-  optimizeCode: (data) => axios.post('/.netlify/functions/analyze', { ...data, type: 'optimize' }),
-  chat: (message) => api.post('/ai/chat', { message }), // Keep chat on backend for now if it requires history
+  reviewCode: (data) => tryWithFallback('/.netlify/functions/analyze', '/ai/review', { ...data, type: 'review' }),
+  debugCode: (data) => tryWithFallback('/.netlify/functions/analyze', '/ai/debug', { ...data, type: 'debug' }),
+  getApproaches: (data) => tryWithFallback('/.netlify/functions/analyze', '/ai/approaches', { ...data, type: 'approaches' }),
+  optimizeCode: (data) => tryWithFallback('/.netlify/functions/analyze', '/ai/optimize', { ...data, type: 'optimize' }),
+  chat: (message) => api.post('/ai/chat', { message }),
 };
 
 export const executeAPI = {

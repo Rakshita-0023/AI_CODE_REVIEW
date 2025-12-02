@@ -6,8 +6,8 @@ const useStore = create(
     (set, get) => ({
       // Theme
       theme: 'light',
-      toggleTheme: () => set((state) => ({ 
-        theme: state.theme === 'light' ? 'dark' : 'light' 
+      toggleTheme: () => set((state) => ({
+        theme: state.theme === 'light' ? 'dark' : 'light'
       })),
 
       // Auth
@@ -18,9 +18,9 @@ const useStore = create(
         // Load user-specific history when logging in
         const userHistoryKey = `codesense_history_user_${user.id}`;
         const userHistory = JSON.parse(localStorage.getItem(userHistoryKey) || '[]');
-        set({ 
-          user, 
-          token, 
+        set({
+          user,
+          token,
           isAuthenticated: true,
           analysisHistory: userHistory
         });
@@ -30,9 +30,9 @@ const useStore = create(
         localStorage.removeItem('user');
         // Load guest history when logging out
         const guestHistory = JSON.parse(localStorage.getItem('codesense_history_guest') || '[]');
-        set({ 
-          user: null, 
-          token: null, 
+        set({
+          user: null,
+          token: null,
           isAuthenticated: false,
           analysisHistory: guestHistory
         });
@@ -41,7 +41,7 @@ const useStore = create(
       // Code Editor
       code: '',
       language: 'javascript',
-      setCode: (code) => set({ code }),
+      setCode: (code) => set({ code, currentAnalysis: null }),
       setLanguage: (language) => set({ language }),
 
       // Analysis Results
@@ -52,19 +52,19 @@ const useStore = create(
       addToHistory: (analysis) => set((state) => {
         const newHistory = [analysis, ...state.analysisHistory.slice(0, 49)];
         // Also save to localStorage for persistence with user-specific key
-        const storageKey = state.isAuthenticated && state.user?.id 
-          ? `codesense_history_user_${state.user.id}` 
+        const storageKey = state.isAuthenticated && state.user?.id
+          ? `codesense_history_user_${state.user.id}`
           : 'codesense_history_guest';
         console.log('Saving to history:', storageKey, newHistory.length);
         localStorage.setItem(storageKey, JSON.stringify(newHistory));
         return { analysisHistory: newHistory };
       }),
       setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),
-      
+
       // Initialize user-specific data
       initializeUserData: () => set((state) => {
-        const storageKey = state.isAuthenticated && state.user?.id 
-          ? `codesense_history_user_${state.user.id}` 
+        const storageKey = state.isAuthenticated && state.user?.id
+          ? `codesense_history_user_${state.user.id}`
           : 'codesense_history_guest';
         const history = JSON.parse(localStorage.getItem(storageKey) || '[]');
         console.log('Loading history:', storageKey, history.length);

@@ -54,6 +54,7 @@ const ActionButtons = () => {
       }
 
       console.log(`${type} API response:`, response);
+      console.log('Response data:', response.data);
 
       const analysis = {
         ...response.data,
@@ -62,9 +63,15 @@ const ActionButtons = () => {
         originalCode: code,
       };
 
+      console.log('Setting analysis:', analysis);
       setCurrentAnalysis(analysis);
       addToHistory(analysis);
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} completed!`);
+      
+      // Force a small delay to ensure state is updated
+      setTimeout(() => {
+        console.log('Current analysis after setting:', useStore.getState().currentAnalysis);
+      }, 100);
     } catch (error) {
       console.error('Analysis error:', error);
       toast.error(`${type.charAt(0).toUpperCase() + type.slice(1)} failed. Please try again.`);
