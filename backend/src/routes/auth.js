@@ -1,16 +1,25 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { Op } from 'sequelize';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
+import RefreshToken from '../models/RefreshToken.js';
+import OAuthAccount from '../models/OAuthAccount.js';
 import OTP from '../models/OTP.js';
 import { sendOTPEmail } from '../services/emailService.js';
 import { sendOTPSMS } from '../services/smsService.js';
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+const generateAccessToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
+};
+
+const generateRefreshToken = () => {
+  return crypto.randomBytes(64).toString('hex');
 };
 
 const generateOTP = () => {
@@ -20,9 +29,9 @@ const generateOTP = () => {
 // Enhanced Registration
 router.post('/register', async (req, res) => {
   try {
-    const { fullName, username, email, phone, password, confirmPassword } = req.body;
+    const { fullName, email, password, confirmPassword } = req.body;
 
-    if (!fullName || !username || !email || !phone || !password || !confirmPassword) {
+    if (!fullName || !email || !password || !confirmPassword) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
@@ -34,41 +43,49 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    if (!/^\+91[6-9]\d{9}$/.test(phone)) {
-      return res.status(400).json({ error: 'Invalid phone number format. Use +91XXXXXXXXXX' });
-    }
-
     const existingUser = await User.findOne({
-      where: {
-        [Op.or]: [{ email }, { username }, { phone }]
-      }
+      where: { email }
     });
 
     if (existingUser) {
-      if (existingUser.email === email) {
-        return res.status(400).json({ error: 'Email already registered' });
-      }
-      if (existingUser.username === username) {
-        return res.status(400).json({ error: 'Username already taken' });
-      }
-      if (existingUser.phone === phone) {
-        return res.status(400).json({ error: 'Phone number already registered' });
-      }
+      return res.status(400).json({ error: 'Email already registered' });
     }
+
+    // Generate username from email
+    const username = email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 4);
 
     const user = await User.create({
       fullName,
       username,
       email,
-      phone,
       password,
     });
 
-    const token = generateToken(user.id);
+    // Generate tokens
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken();
+
+    // Store refresh token
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      deviceInfo: {
+        userAgent: req.headers['user-agent'],
+        ip: req.ip,
+      },
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     res.status(201).json({
       message: 'Account created successfully',
-      token,
+      accessToken,
       user: user.toJSON(),
     });
   } catch (error) {
@@ -276,16 +293,174 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid password' });
     }
 
-    const token = generateToken(user.id);
+    // Generate tokens
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken();
+
+    // Store refresh token
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      deviceInfo: {
+        userAgent: req.headers['user-agent'],
+        ip: req.ip,
+      },
+    });
+
+    // Set refresh token as HTTP-only cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.json({
       message: `Welcome back, ${user.fullName}!`,
-      token,
+      accessToken,
       user: user.toJSON(),
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Google OAuth Callback
+router.get('/google/callback', async (req, res) => {
+  try {
+    const { code } = req.query;
+    // Handle OAuth callback logic here
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`);
+  } catch (error) {
+    console.error('Google OAuth callback error:', error);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/signin?error=oauth_failed`);
+  }
+});
+
+// Google OAuth Login
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    let user = await User.findOne({ where: { email } });
+    let oauthAccount = await OAuthAccount.findOne({
+      where: { provider: 'google', providerId: googleId },
+    });
+
+    if (!user) {
+      // Create new user
+      user = await User.create({
+        fullName: name,
+        username: email.split('@')[0],
+        email,
+        password: crypto.randomBytes(32).toString('hex'), // Random password for OAuth users
+      });
+    }
+
+    if (!oauthAccount) {
+      // Link OAuth account
+      oauthAccount = await OAuthAccount.create({
+        userId: user.id,
+        provider: 'google',
+        providerId: googleId,
+        email,
+        name,
+        avatar: picture,
+      });
+    }
+
+    // Generate tokens
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken();
+
+    // Store refresh token
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      deviceInfo: {
+        userAgent: req.headers['user-agent'],
+        ip: req.ip,
+      },
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      message: `Welcome, ${user.fullName}!`,
+      accessToken,
+      user: user.toJSON(),
+    });
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    res.status(500).json({ error: 'Google authentication failed' });
+  }
+});
+
+// Refresh Token
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'Refresh token not provided' });
+    }
+
+    const tokenRecord = await RefreshToken.findOne({
+      where: {
+        token: refreshToken,
+        isRevoked: false,
+        expiresAt: { [Op.gt]: new Date() },
+      },
+      include: [{ model: User }],
+    });
+
+    if (!tokenRecord) {
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+
+    // Generate new access token
+    const accessToken = generateAccessToken(tokenRecord.userId);
+
+    res.json({ accessToken });
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(500).json({ error: 'Token refresh failed' });
+  }
+});
+
+// Logout
+router.post('/logout', async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (refreshToken) {
+      await RefreshToken.update(
+        { isRevoked: true },
+        { where: { token: refreshToken } }
+      );
+    }
+
+    res.clearCookie('refreshToken');
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ error: 'Logout failed' });
   }
 });
 

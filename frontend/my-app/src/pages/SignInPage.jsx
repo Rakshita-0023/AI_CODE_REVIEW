@@ -5,6 +5,7 @@ import { authAPI } from '../services/api';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
 import TransitionAnimation from '../components/ui/TransitionAnimation';
+import GoogleOAuthButton from '../components/auth/GoogleOAuthButton';
 
 const SignInPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -64,7 +65,7 @@ const SignInPage = () => {
 
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        login(response.data.user, response.data.token);
+        login(response.data.user, response.data.accessToken);
         toast.success(response.data.message || 'Welcome back!');
         setShowTransition(true);
       } catch (apiError) {
@@ -159,6 +160,18 @@ const SignInPage = () => {
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
+
+            <div className="flex items-center my-6">
+              <div className="flex-1 border-t border-gray-700"></div>
+              <span className="px-4 text-gray-400 text-sm">or</span>
+              <div className="flex-1 border-t border-gray-700"></div>
+            </div>
+
+            <GoogleOAuthButton onSuccess={(user, token) => {
+              login(user, token);
+              toast.success(`Welcome back, ${user.fullName}!`);
+              setShowTransition(true);
+            }} />
 
             <div className="mt-6 text-center space-y-3">
               <p className="text-center text-white/70 mt-4">

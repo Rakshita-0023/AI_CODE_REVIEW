@@ -14,20 +14,36 @@ const useStore = create(
       user: null,
       token: null,
       isAuthenticated: false,
-      login: (user, token) => {
+      login: (user, accessToken) => {
+        // Store tokens
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('user', JSON.stringify(user));
+        
         // Load user-specific history when logging in
         const userHistoryKey = `codesense_history_user_${user.id}`;
         const userHistory = JSON.parse(localStorage.getItem(userHistoryKey) || '[]');
         set({
           user,
-          token,
+          token: accessToken,
           isAuthenticated: true,
           analysisHistory: userHistory
         });
       },
-      logout: () => {
+      logout: async () => {
+        try {
+          // Call logout API to revoke refresh token
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+        } catch (error) {
+          console.error('Logout API error:', error);
+        }
+        
+        localStorage.removeItem('accessToken');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        
         // Load guest history when logging out
         const guestHistory = JSON.parse(localStorage.getItem('codesense_history_guest') || '[]');
         set({
@@ -43,6 +59,14 @@ const useStore = create(
       language: 'javascript',
       setCode: (code) => set({ code, currentAnalysis: null }),
       setLanguage: (language) => set({ language }),
+
+      // Project Management
+      currentProject: null,
+      setCurrentProject: (project) => set({ 
+        currentProject: project,
+        language: project?.language || 'javascript',
+        code: project?.content || ''
+      }),
 
       // Analysis Results
       currentAnalysis: null,

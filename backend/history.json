@@ -1,0 +1,397 @@
+[
+  {
+    "id": 1765137363335,
+    "userId": 1,
+    "workspaceId": null,
+    "type": "review",
+    "title": "Code Review",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "review-1765137363335",
+      "language": "python",
+      "qualityScore": 100,
+      "issues": [
+        {
+          "line": 1,
+          "severity": "info",
+          "category": "general",
+          "message": "✅ PYTHON syntax is correct",
+          "suggestion": "No issues detected"
+        }
+      ],
+      "summary": "Code quality is excellent"
+    },
+    "createdAt": "2025-12-07T19:56:03.335Z"
+  },
+  {
+    "id": 1765137364570,
+    "userId": 1,
+    "workspaceId": null,
+    "type": "optimize",
+    "title": "Code Optimization",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "optimize-1765137364570",
+      "language": "python",
+      "optimizations": [
+        {
+          "type": "Built-in Functions",
+          "description": "Use filter() function",
+          "optimizedCode": "numbers = [10, 21, 32, 43, 54, 65, 76]\n\neven_numbers = list(filter(lambda x: x % 2 == 0, numbers))\nprint(even_numbers)",
+          "improvement": "Functional programming approach"
+        }
+      ]
+    },
+    "createdAt": "2025-12-07T19:56:04.570Z"
+  },
+  {
+    "id": 1765137406090,
+    "userId": 1,
+    "workspaceId": null,
+    "type": "review",
+    "title": "Code Review",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "review-1765137406090",
+      "language": "python",
+      "qualityScore": 100,
+      "issues": [
+        {
+          "line": 1,
+          "severity": "info",
+          "category": "general",
+          "message": "✅ PYTHON syntax is correct",
+          "suggestion": "No issues detected"
+        }
+      ],
+      "summary": "Code quality is excellent"
+    },
+    "createdAt": "2025-12-07T19:56:46.090Z"
+  },
+  {
+    "id": 1765137409523,
+    "userId": 1,
+    "workspaceId": null,
+    "type": "optimize",
+    "title": "Code Optimization",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "optimize-1765137409523",
+      "language": "python",
+      "optimizations": [
+        {
+          "type": "Built-in Functions",
+          "description": "Use filter() function",
+          "optimizedCode": "numbers = [10, 21, 32, 43, 54, 65, 76]\n\neven_numbers = list(filter(lambda x: x % 2 == 0, numbers))\nprint(even_numbers)",
+          "improvement": "Functional programming approach"
+        }
+      ]
+    },
+    "createdAt": "2025-12-07T19:56:49.523Z"
+  },
+  {
+    "id": 1765137475231,
+    "userId": 1,
+    "workspaceId": 1765137356876,
+    "type": "review",
+    "title": "Code Review",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "review-1765137475231",
+      "language": "python",
+      "qualityScore": 100,
+      "issues": [
+        {
+          "line": 1,
+          "severity": "info",
+          "category": "general",
+          "message": "✅ PYTHON syntax is correct",
+          "suggestion": "No issues detected"
+        }
+      ],
+      "summary": "Code quality is excellent"
+    },
+    "createdAt": "2025-12-07T19:57:55.231Z"
+  },
+  {
+    "id": 1765137675984,
+    "userId": 1,
+    "workspaceId": 1765137356876,
+    "type": "review",
+    "title": "Code Review",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "review-1765137675984",
+      "language": "python",
+      "qualityScore": 100,
+      "issues": [
+        {
+          "line": 1,
+          "severity": "info",
+          "category": "general",
+          "message": "✅ PYTHON syntax is correct",
+          "suggestion": "No issues detected"
+        }
+      ],
+      "summary": "Code quality is excellent"
+    },
+    "createdAt": "2025-12-07T20:01:15.984Z"
+  },
+  {
+    "id": 1765138250326,
+    "userId": 1,
+    "workspaceId": 1765137356876,
+    "type": "review",
+    "title": "Code Review",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "review-1765138250326",
+      "language": "python",
+      "qualityScore": 100,
+      "issues": [
+        {
+          "line": 1,
+          "severity": "info",
+          "category": "general",
+          "message": "✅ PYTHON syntax is correct",
+          "suggestion": "No issues detected"
+        }
+      ],
+      "summary": "Code quality is excellent"
+    },
+    "createdAt": "2025-12-07T20:10:50.326Z"
+  },
+  {
+    "id": 1765138514948,
+    "userId": 1,
+    "workspaceId": 1765137356876,
+    "type": "review",
+    "title": "Code Review",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "review-1765138514948",
+      "language": "python",
+      "qualityScore": 100,
+      "issues": [
+        {
+          "line": 1,
+          "severity": "info",
+          "category": "general",
+          "message": "✅ PYTHON syntax is correct",
+          "suggestion": "No issues detected"
+        }
+      ],
+      "summary": "Code quality is excellent"
+    },
+    "createdAt": "2025-12-07T20:15:14.948Z"
+  },
+  {
+    "id": 1765138516259,
+    "userId": 1,
+    "workspaceId": 1765137356876,
+    "type": "debug",
+    "title": "Debug Code",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "debug-1765138516259",
+      "language": "python",
+      "bugs": [
+        {
+          "line": 1,
+          "type": "info",
+          "severity": "low",
+          "issue": "No errors detected",
+          "fix": "python syntax is correct",
+          "code": ""
+        }
+      ],
+      "fixedCode": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+      "explanation": "✅ PYTHON SCAN: No errors found."
+    },
+    "createdAt": "2025-12-07T20:15:16.259Z"
+  },
+  {
+    "id": 1765138517178,
+    "userId": 1,
+    "workspaceId": 1765137356876,
+    "type": "approaches",
+    "title": "Alternative Approaches",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "approaches-1765138517177",
+      "language": "python",
+      "alternatives": [
+        {
+          "approach": "Modern python",
+          "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+          "pros": [
+            "Clean",
+            "Readable"
+          ],
+          "cons": [
+            "None"
+          ]
+        }
+      ]
+    },
+    "createdAt": "2025-12-07T20:15:17.178Z"
+  },
+  {
+    "id": 1765138518183,
+    "userId": 1,
+    "workspaceId": 1765137356876,
+    "type": "optimize",
+    "title": "Code Optimization",
+    "code": "# Welcome to your workspace\nprint(\"Hello, World!\")",
+    "language": "python",
+    "result": {
+      "reviewId": "optimize-1765138518183",
+      "language": "python",
+      "optimizations": [
+        {
+          "type": "Built-in Functions",
+          "description": "Use filter() function",
+          "optimizedCode": "numbers = [10, 21, 32, 43, 54, 65, 76]\n\neven_numbers = list(filter(lambda x: x % 2 == 0, numbers))\nprint(even_numbers)",
+          "improvement": "Functional programming approach"
+        }
+      ]
+    },
+    "createdAt": "2025-12-07T20:15:18.183Z"
+  },
+  {
+    "id": 1765139871384,
+    "userId": 1,
+    "workspaceId": 1765139856849,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "// Welcome to your workspace\nconsole.log(\"Hello, World!\");",
+    "language": null,
+    "result": {
+      "message": "is this code correct",
+      "response": "I understand you're asking: \"is this code correct\". Based on your code context, I can help you with that."
+    },
+    "createdAt": "2025-12-07T20:37:51.383Z"
+  },
+  {
+    "id": 1765139891238,
+    "userId": 1,
+    "workspaceId": 1765139856849,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "// Welcome to your workspace\nconsole.log(\"Hello, World!\");",
+    "language": null,
+    "result": {
+      "message": "yes about this",
+      "response": "I understand you're asking: \"yes about this\". Based on your code context, I can help you with that."
+    },
+    "createdAt": "2025-12-07T20:38:11.237Z"
+  },
+  {
+    "id": 1765140093905,
+    "userId": 1,
+    "workspaceId": 1765139856849,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "// Welcome to your workspace\nconsole.log(\"Hello, World!\");",
+    "language": null,
+    "result": {
+      "message": "tell me about this code",
+      "response": "I understand you're asking: \"tell me about this code\". Based on your code context, I can help you with that."
+    },
+    "createdAt": "2025-12-07T20:41:33.904Z"
+  },
+  {
+    "id": 1765140444774,
+    "userId": 1,
+    "workspaceId": 1765139856849,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "// Welcome to your workspace\nconsole.log(\"Hello, World!\");",
+    "language": null,
+    "result": {
+      "message": "fix this",
+      "response": "I can see your code context. Your question \"fix this\" - I can help with code analysis, debugging, optimization, and explanations. What specific aspect would you like me to focus on?"
+    },
+    "createdAt": "2025-12-07T20:47:24.774Z"
+  },
+  {
+    "id": 1765140454833,
+    "userId": 1,
+    "workspaceId": 1765139856849,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "// Welcome to your workspace\nconsole.log(\"Hello, World!\");",
+    "language": null,
+    "result": {
+      "message": "on the code",
+      "response": "I can see your code context. Your question \"on the code\" - I can help with code analysis, debugging, optimization, and explanations. What specific aspect would you like me to focus on?"
+    },
+    "createdAt": "2025-12-07T20:47:34.833Z"
+  },
+  {
+    "id": 1765140986722,
+    "userId": 1,
+    "workspaceId": 1765139856849,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "// Welcome to your workspace\nconsole.log(\"Hello, World!\");\nprint()",
+    "language": null,
+    "result": {
+      "message": "fix this code",
+      "response": "I'm having trouble connecting to the AI service right now. Here's what I can tell you about your question: \"fix this code\". I can see you have code context provided. Please try again in a moment."
+    },
+    "createdAt": "2025-12-07T20:56:26.722Z"
+  },
+  {
+    "id": 1765141168417,
+    "userId": 1,
+    "workspaceId": null,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "",
+    "language": null,
+    "result": {
+      "message": "hello",
+      "response": "I'm having trouble connecting to the AI service right now. Here's what I can tell you about your question: \"hello\". Please try again in a moment."
+    },
+    "createdAt": "2025-12-07T20:59:28.417Z"
+  },
+  {
+    "id": 1765141281428,
+    "userId": 1,
+    "workspaceId": null,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "",
+    "language": null,
+    "result": {
+      "message": "hello",
+      "response": "Hello! How can I help you today with programming or software development?"
+    },
+    "createdAt": "2025-12-07T21:01:21.428Z"
+  },
+  {
+    "id": 1765141301582,
+    "userId": 1,
+    "workspaceId": 1765139856849,
+    "type": "chat",
+    "title": "AI Chat",
+    "code": "// Welcome to your workspace\nconsole.log(\"Hello, World!\");\nprint()",
+    "language": null,
+    "result": {
+      "message": "help me fix the code",
+      "response": "The issue is with the `print()` function. JavaScript does not have a built-in `print()` function for console output like some other languages.\n\nTo log output to the console in JavaScript, you should use `console.log()`.\n\nHere's the corrected code:\n\n```javascript\n// Welcome to your workspace\nconsole.log(\"Hello, World!\");\nconsole.log(); // Or console.log(\"something else\"); if you meant to print content\n```"
+    },
+    "createdAt": "2025-12-07T21:01:41.582Z"
+  }
+]

@@ -16,5 +16,32 @@
     "phone": "+916752876374",
     "password": "1234567",
     "createdAt": "2025-12-07T16:30:31.069Z"
+  },
+  {
+    "id": 1765144191172,
+    "fullName": "Polana Rakshita",
+    "username": "polana.rakshita2024_j7sv",
+    "email": "polana.rakshita2024@nst.rishihood.edu.in",
+    "googleId": "112228694707628938240",
+    "avatar": "https://lh3.googleusercontent.com/a/ACg8ocKu1XBHVHGGSwvU88p-MXSj1YVEQ1OxVsq0_oGPMj2SniY7-Q=s96-c",
+    "createdAt": "2025-12-07T21:49:51.172Z"
+  },
+  {
+    "id": 1765144810421,
+    "fullName": "rakshita",
+    "username": "polanarakshita28_v8bn",
+    "email": "polanarakshita28@gmail.com",
+    "googleId": "111779813430100455294",
+    "avatar": "https://lh3.googleusercontent.com/a/ACg8ocKE9inPIp4hkXgyrF0T3Fr_7CLC9WxYXKUnL2gI_8b8quUY9g=s96-c",
+    "createdAt": "2025-12-07T22:00:10.421Z"
+  },
+  {
+    "id": 1765144866069,
+    "fullName": "Rakshita",
+    "username": "rakshita0023_0w42",
+    "email": "rakshita0023@gmail.com",
+    "googleId": "100365081890480233964",
+    "avatar": "https://lh3.googleusercontent.com/a/ACg8ocJ7TKtTrGz5eeiYHoD-8VBI6sC-mBitcZNve8GRXbEyxqp1Zg=s96-c",
+    "createdAt": "2025-12-07T22:01:06.069Z"
   }
 ]

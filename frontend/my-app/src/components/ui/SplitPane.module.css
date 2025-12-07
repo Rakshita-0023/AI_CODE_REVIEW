@@ -19,7 +19,7 @@
 }
 
 .splitter {
-  background: var(--border-color);
+  background: rgba(75, 85, 99, 0.5);
   position: relative;
   z-index: 10;
   transition: background-color 0.2s ease;
