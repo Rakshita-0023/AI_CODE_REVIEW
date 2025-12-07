@@ -16,7 +16,7 @@ const ProjectCodeEditor = () => {
           language={currentProject?.language === 'auto' ? 'javascript' : (currentProject?.language || language)}
           value={code}
           onChange={handleEditorChange}
-          theme={theme === 'dark' ? 'vs-dark' : 'light'}
+          theme="vs-dark"
           options={{
             minimap: { enabled: false },
             fontSize: 14,

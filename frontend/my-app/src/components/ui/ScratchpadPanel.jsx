@@ -176,7 +176,7 @@ const ScratchpadPanel = () => {
                 language="markdown"
                 value={scratchpadContent}
                 onChange={(value) => setScratchpadContent(value || '')}
-                theme={theme === 'dark' ? 'vs-dark' : 'light'}
+                theme="vs-dark"
                 options={{
                   minimap: { enabled: false },
                   fontSize: 14,

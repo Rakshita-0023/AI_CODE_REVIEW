@@ -61,7 +61,7 @@ const CodeEditor = () => {
           language={language === 'auto' ? 'javascript' : language}
           value={code}
           onChange={handleEditorChange}
-          theme={theme === 'dark' ? 'vs-dark' : 'light'}
+          theme="vs-dark"
           options={{
             minimap: { enabled: false },
             fontSize: 14,
