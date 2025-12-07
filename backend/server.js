@@ -22,8 +22,16 @@ const PORT = process.env.PORT || 5001;
 const execAsync = promisify(exec);
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3456'],
-  credentials: true
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:3000', 
+    'http://localhost:3456',
+    'https://codesenseai.netlify.app',
+    'https://ai-code-review-lmle.onrender.com'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
@@ -1285,16 +1293,31 @@ app.get('/health', (req, res) => {
 });
 
 // Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'AI Code Review API is running',
-    status: 'OK',
-    registeredUsers: users.length,
-    endpoints: {
-      auth: ['/api/auth/register', '/api/auth/login'],
-      ai: ['/api/ai/review', '/api/ai/debug', '/api/ai/optimize', '/api/ai/chat']
-    }
-  });
+app.get('/', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) FROM users');
+    const userCount = parseInt(result.rows[0].count);
+    
+    res.json({
+      message: 'AI Code Review API is running',
+      status: 'OK',
+      registeredUsers: userCount,
+      endpoints: {
+        auth: ['/api/auth/register', '/api/auth/login'],
+        ai: ['/api/ai/review', '/api/ai/debug', '/api/ai/optimize', '/api/ai/chat']
+      }
+    });
+  } catch (error) {
+    res.json({
+      message: 'AI Code Review API is running',
+      status: 'OK',
+      registeredUsers: 0,
+      endpoints: {
+        auth: ['/api/auth/register', '/api/auth/login'],
+        ai: ['/api/ai/review', '/api/ai/debug', '/api/ai/optimize', '/api/ai/chat']
+      }
+    });
+  }
 });
 
 app.listen(PORT, () => {
