@@ -22,5 +22,17 @@
     "content": "# Welcome to your workspace\nprint(\"Hello, World!\")",
     "createdAt": "2025-12-07T21:54:58.649Z",
     "lastOpenedAt": "2025-12-07T21:55:00.673Z"
+  },
+  {
+    "id": 1765145261423,
+    "userId": 1765144810421,
+    "title": "hello",
+    "description": "",
+    "type": "sandbox",
+    "language": "javascript",
+    "tags": [],
+    "content": "// Welcome to your workspace\nconsole.log(\"Hello, World!\");",
+    "createdAt": "2025-12-07T22:07:41.423Z",
+    "lastOpenedAt": "2025-12-07T22:07:43.448Z"
   }
 ]

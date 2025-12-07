@@ -7,6 +7,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import os from 'os';
 import dotenv from 'dotenv';
+import pkg from 'pg';
+const { Pool } = pkg;
 
 // ES module compatibility
 const __filename = fileURLToPath(import.meta.url);
@@ -92,42 +94,92 @@ class CodeAnalyzer {
   }
 }
 
-// Data storage
-let users = [];
-let workspaces = [];
-let history = [];
-let notes = [];
-let scratchpads = [];
+// PostgreSQL connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
-// File paths
-const USERS_FILE = path.join(process.cwd(), 'users.json');
-const WORKSPACES_FILE = path.join(process.cwd(), 'workspaces.json');
-const HISTORY_FILE = path.join(process.cwd(), 'history.json');
-const NOTES_FILE = path.join(process.cwd(), 'notes.json');
-const SCRATCHPADS_FILE = path.join(process.cwd(), 'scratchpads.json');
-
-// Load data functions
-const loadData = () => {
+// Initialize database tables
+const initDatabase = async () => {
   try {
-    if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-    if (fs.existsSync(WORKSPACES_FILE)) workspaces = JSON.parse(fs.readFileSync(WORKSPACES_FILE, 'utf8'));
-    if (fs.existsSync(HISTORY_FILE)) history = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf8'));
-    if (fs.existsSync(NOTES_FILE)) notes = JSON.parse(fs.readFileSync(NOTES_FILE, 'utf8'));
-    if (fs.existsSync(SCRATCHPADS_FILE)) scratchpads = JSON.parse(fs.readFileSync(SCRATCHPADS_FILE, 'utf8'));
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        full_name VARCHAR(255) NOT NULL,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255),
+        google_id VARCHAR(255),
+        avatar VARCHAR(500),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS workspaces (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        type VARCHAR(50) DEFAULT 'sandbox',
+        language VARCHAR(50) DEFAULT 'javascript',
+        tags TEXT[],
+        content TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_opened_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS history (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        workspace_id INTEGER,
+        type VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        code TEXT,
+        language VARCHAR(50),
+        result JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        folder VARCHAR(255) DEFAULT 'General',
+        tags TEXT[],
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS scratchpads (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        workspace_id INTEGER,
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    console.log('Database tables initialized');
   } catch (error) {
-    console.log('Starting with fresh data');
+    console.error('Database initialization error:', error);
   }
 };
 
-// Save data functions
-const saveUsers = () => fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-const saveWorkspaces = () => fs.writeFileSync(WORKSPACES_FILE, JSON.stringify(workspaces, null, 2));
-const saveHistory = () => fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
-const saveNotes = () => fs.writeFileSync(NOTES_FILE, JSON.stringify(notes, null, 2));
-const saveScratchpads = () => fs.writeFileSync(SCRATCHPADS_FILE, JSON.stringify(scratchpads, null, 2));
-
-// Load initial data
-loadData();
+// Initialize database on startup
+initDatabase();
 
 // AI Chat endpoint with Gemini 2.5 Flash integration
 app.post('/api/ai/chat', authenticateUser, async (req, res) => {
@@ -172,19 +224,10 @@ Provide a clear, helpful response. If analyzing code, be specific about issues a
     }
     
     // Save to history
-    const historyEntry = {
-      id: Date.now(),
-      userId: req.userId,
-      workspaceId: workspaceId || null,
-      type: 'chat',
-      title: 'AI Chat',
-      code: codeContext,
-      language: null,
-      result: { message, response },
-      createdAt: new Date().toISOString()
-    };
-    history.push(historyEntry);
-    saveHistory();
+    await pool.query(
+      'INSERT INTO history (user_id, workspace_id, type, title, code, language, result) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [req.userId, workspaceId || null, 'chat', 'AI Chat', codeContext, null, JSON.stringify({ message, response })]
+    );
     
     res.json({ response });
   } catch (error) {
@@ -236,19 +279,10 @@ Format your response clearly with sections for issues and fixes.`;
     }
     
     // Save to history
-    const historyEntry = {
-      id: Date.now(),
-      userId: req.userId,
-      workspaceId: workspaceId || null,
-      type: 'debug',
-      title: 'Code Debug',
-      code,
-      language,
-      result: { response },
-      createdAt: new Date().toISOString()
-    };
-    history.push(historyEntry);
-    saveHistory();
+    await pool.query(
+      'INSERT INTO history (user_id, workspace_id, type, title, code, language, result) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [req.userId, workspaceId || null, 'debug', 'Code Debug', code, language, JSON.stringify({ response })]
+    );
     
     res.json({ response, language });
   } catch (error) {
@@ -301,19 +335,10 @@ Focus on practical, actionable improvements.`;
     }
     
     // Save to history
-    const historyEntry = {
-      id: Date.now(),
-      userId: req.userId,
-      workspaceId: workspaceId || null,
-      type: 'optimize',
-      title: 'Code Optimization',
-      code,
-      language,
-      result: { response },
-      createdAt: new Date().toISOString()
-    };
-    history.push(historyEntry);
-    saveHistory();
+    await pool.query(
+      'INSERT INTO history (user_id, workspace_id, type, title, code, language, result) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [req.userId, workspaceId || null, 'optimize', 'Code Optimization', code, language, JSON.stringify({ response })]
+    );
     
     res.json({ response, language });
   } catch (error) {
@@ -326,257 +351,389 @@ Focus on practical, actionable improvements.`;
 });
 
 // AI Review endpoint
-app.post('/api/ai/review', authenticateUser, (req, res) => {
-  const { code, language, workspaceId } = req.body;
-  const issues = CodeAnalyzer.analyzeCode(code, language);
+app.post('/api/ai/review', authenticateUser, async (req, res) => {
+  try {
+    const { code, language, workspaceId } = req.body;
+    const issues = CodeAnalyzer.analyzeCode(code, language);
 
-  if (issues.length === 0) {
-    issues.push({
-      line: 1,
-      severity: 'info',
-      category: 'general',
-      message: `✅ ${(language || 'Code').toUpperCase()} syntax is correct`,
-      suggestion: 'No issues detected'
-    });
+    if (issues.length === 0) {
+      issues.push({
+        line: 1,
+        severity: 'info',
+        category: 'general',
+        message: `✅ ${(language || 'Code').toUpperCase()} syntax is correct`,
+        suggestion: 'No issues detected'
+      });
+    }
+
+    const errorCount = issues.filter(i => i.severity === 'high').length;
+    const warningCount = issues.filter(i => i.severity === 'medium').length;
+    const qualityScore = Math.max(30, 100 - (errorCount * 20) - (warningCount * 10));
+
+    const result = {
+      reviewId: 'review-' + Date.now(),
+      language: language || 'javascript',
+      qualityScore,
+      issues,
+      summary: issues.length === 1 && issues[0].severity === 'info' ? 'Code quality is excellent' : `Found ${errorCount} error(s), ${warningCount} warning(s)`
+    };
+
+    // Save to history
+    await pool.query(
+      'INSERT INTO history (user_id, workspace_id, type, title, code, language, result) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [req.userId, workspaceId || null, 'review', 'Code Review', code, language, JSON.stringify(result)]
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('Review error:', error);
+    res.status(500).json({ error: 'Failed to review code' });
   }
-
-  const errorCount = issues.filter(i => i.severity === 'high').length;
-  const warningCount = issues.filter(i => i.severity === 'medium').length;
-  const qualityScore = Math.max(30, 100 - (errorCount * 20) - (warningCount * 10));
-
-  const result = {
-    reviewId: 'review-' + Date.now(),
-    language: language || 'javascript',
-    qualityScore,
-    issues,
-    summary: issues.length === 1 && issues[0].severity === 'info' ? 'Code quality is excellent' : `Found ${errorCount} error(s), ${warningCount} warning(s)`
-  };
-
-  // Save to history
-  const historyEntry = {
-    id: Date.now(),
-    userId: req.userId,
-    workspaceId: workspaceId || null,
-    type: 'review',
-    title: 'Code Review',
-    code,
-    language,
-    result,
-    createdAt: new Date().toISOString()
-  };
-  history.push(historyEntry);
-  saveHistory();
-
-  res.json(result);
 });
 
 // History endpoints
-app.get('/api/history', authenticateUser, (req, res) => {
-  const { page = 1, limit = 10, search = '', sortBy = 'createdAt', type = '' } = req.query;
-  let userHistory = history.filter(h => h.userId === req.userId);
-  
-  // Apply search filter
-  if (search) {
-    userHistory = userHistory.filter(item => 
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      (item.result && JSON.stringify(item.result).toLowerCase().includes(search.toLowerCase()))
-    );
+app.get('/api/history', authenticateUser, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', sortBy = 'created_at', type = '' } = req.query;
+    
+    let query = 'SELECT * FROM history WHERE user_id = $1';
+    let params = [req.userId];
+    let paramCount = 1;
+    
+    if (search) {
+      paramCount++;
+      query += ` AND (title ILIKE $${paramCount} OR code ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+    }
+    
+    if (type) {
+      paramCount++;
+      query += ` AND type = $${paramCount}`;
+      params.push(type);
+    }
+    
+    query += ` ORDER BY ${sortBy === 'title' ? 'title' : sortBy === 'type' ? 'type' : 'created_at DESC'}`;
+    query += ` LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+    
+    const result = await pool.query(query, params);
+    
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) FROM history WHERE user_id = $1';
+    let countParams = [req.userId];
+    if (search) {
+      countQuery += ' AND (title ILIKE $2 OR code ILIKE $2)';
+      countParams.push(`%${search}%`);
+    }
+    if (type) {
+      countQuery += ` AND type = $${countParams.length + 1}`;
+      countParams.push(type);
+    }
+    
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].count);
+    
+    res.json({ 
+      history: result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        workspaceId: row.workspace_id,
+        type: row.type,
+        title: row.title,
+        code: row.code,
+        language: row.language,
+        result: row.result,
+        createdAt: row.created_at
+      })),
+      total,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      currentPage: parseInt(page)
+    });
+  } catch (error) {
+    console.error('History fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch history' });
   }
-  
-  // Apply type filter
-  if (type) {
-    userHistory = userHistory.filter(item => item.type === type);
-  }
-  
-  // Apply sorting
-  userHistory.sort((a, b) => {
-    if (sortBy === 'title') return a.title.localeCompare(b.title);
-    if (sortBy === 'type') return a.type.localeCompare(b.type);
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
-  
-  // Apply pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + parseInt(limit);
-  const paginatedHistory = userHistory.slice(startIndex, endIndex);
-  
-  res.json({ 
-    history: paginatedHistory,
-    total: userHistory.length,
-    totalPages: Math.ceil(userHistory.length / limit),
-    currentPage: parseInt(page)
-  });
 });
 
 // Notes endpoints
-app.get('/api/notes', authenticateUser, (req, res) => {
-  const { page = 1, limit = 10, search = '', sortBy = 'updatedAt', folder = '' } = req.query;
-  let userNotes = notes.filter(n => n.userId === req.userId);
-  
-  // Apply search filter
-  if (search) {
-    userNotes = userNotes.filter(note => 
-      note.title.toLowerCase().includes(search.toLowerCase()) ||
-      note.content.toLowerCase().includes(search.toLowerCase())
+app.get('/api/notes', authenticateUser, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', sortBy = 'updated_at', folder = '' } = req.query;
+    
+    let query = 'SELECT * FROM notes WHERE user_id = $1';
+    let params = [req.userId];
+    let paramCount = 1;
+    
+    if (search) {
+      paramCount++;
+      query += ` AND (title ILIKE $${paramCount} OR content ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+    }
+    
+    if (folder && folder !== 'All') {
+      paramCount++;
+      query += ` AND folder = $${paramCount}`;
+      params.push(folder);
+    }
+    
+    const orderBy = sortBy === 'title' ? 'title' : sortBy === 'created_at' ? 'created_at DESC' : 'updated_at DESC';
+    query += ` ORDER BY ${orderBy}`;
+    query += ` LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+    
+    const result = await pool.query(query, params);
+    
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) FROM notes WHERE user_id = $1';
+    let countParams = [req.userId];
+    if (search) {
+      countQuery += ' AND (title ILIKE $2 OR content ILIKE $2)';
+      countParams.push(`%${search}%`);
+    }
+    if (folder && folder !== 'All') {
+      countQuery += ` AND folder = $${countParams.length + 1}`;
+      countParams.push(folder);
+    }
+    
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].count);
+    
+    res.json({ 
+      notes: result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        title: row.title,
+        content: row.content,
+        folder: row.folder,
+        tags: row.tags,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      })),
+      total,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      currentPage: parseInt(page)
+    });
+  } catch (error) {
+    console.error('Notes fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch notes' });
+  }
+});
+
+app.post('/api/notes', authenticateUser, async (req, res) => {
+  try {
+    const { title, content, folder, tags = [] } = req.body;
+    
+    const result = await pool.query(
+      'INSERT INTO notes (user_id, title, content, folder, tags) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [req.userId, title, content, folder || 'General', tags]
     );
+    
+    const note = result.rows[0];
+    res.status(201).json({
+      id: note.id,
+      userId: note.user_id,
+      title: note.title,
+      content: note.content,
+      folder: note.folder,
+      tags: note.tags,
+      createdAt: note.created_at,
+      updatedAt: note.updated_at
+    });
+  } catch (error) {
+    console.error('Note creation error:', error);
+    res.status(500).json({ error: 'Failed to create note' });
   }
-  
-  // Apply folder filter
-  if (folder && folder !== 'All') {
-    userNotes = userNotes.filter(note => note.folder === folder);
-  }
-  
-  // Apply sorting
-  userNotes.sort((a, b) => {
-    if (sortBy === 'title') return a.title.localeCompare(b.title);
-    if (sortBy === 'createdAt') return new Date(b.createdAt) - new Date(a.createdAt);
-    return new Date(b.updatedAt) - new Date(a.updatedAt);
-  });
-  
-  // Apply pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + parseInt(limit);
-  const paginatedNotes = userNotes.slice(startIndex, endIndex);
-  
-  res.json({ 
-    notes: paginatedNotes,
-    total: userNotes.length,
-    totalPages: Math.ceil(userNotes.length / limit),
-    currentPage: parseInt(page)
-  });
 });
 
-app.post('/api/notes', authenticateUser, (req, res) => {
-  const { title, content, folder, tags = [] } = req.body;
-  const note = {
-    id: Date.now(),
-    userId: req.userId,
-    title,
-    content,
-    folder: folder || 'General',
-    tags,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  notes.push(note);
-  saveNotes();
-  res.status(201).json(note);
+app.put('/api/notes/:id', authenticateUser, async (req, res) => {
+  try {
+    const { title, content, folder, tags } = req.body;
+    
+    const result = await pool.query(
+      'UPDATE notes SET title = COALESCE($1, title), content = COALESCE($2, content), folder = COALESCE($3, folder), tags = COALESCE($4, tags), updated_at = CURRENT_TIMESTAMP WHERE id = $5 AND user_id = $6 RETURNING *',
+      [title, content, folder, tags, req.params.id, req.userId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    
+    const note = result.rows[0];
+    res.json({
+      id: note.id,
+      userId: note.user_id,
+      title: note.title,
+      content: note.content,
+      folder: note.folder,
+      tags: note.tags,
+      createdAt: note.created_at,
+      updatedAt: note.updated_at
+    });
+  } catch (error) {
+    console.error('Note update error:', error);
+    res.status(500).json({ error: 'Failed to update note' });
+  }
 });
 
-app.put('/api/notes/:id', authenticateUser, (req, res) => {
-  const { title, content, folder, tags } = req.body;
-  const noteIndex = notes.findIndex(n => n.id == req.params.id && n.userId === req.userId);
-  
-  if (noteIndex === -1) {
-    return res.status(404).json({ error: 'Note not found' });
+app.delete('/api/notes/:id', authenticateUser, async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM notes WHERE id = $1 AND user_id = $2 RETURNING *', [req.params.id, req.userId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    
+    res.json({ message: 'Note deleted successfully' });
+  } catch (error) {
+    console.error('Note delete error:', error);
+    res.status(500).json({ error: 'Failed to delete note' });
   }
-  
-  notes[noteIndex] = {
-    ...notes[noteIndex],
-    title: title || notes[noteIndex].title,
-    content: content || notes[noteIndex].content,
-    folder: folder || notes[noteIndex].folder,
-    tags: tags || notes[noteIndex].tags,
-    updatedAt: new Date().toISOString()
-  };
-  
-  saveNotes();
-  res.json(notes[noteIndex]);
-});
-
-app.delete('/api/notes/:id', authenticateUser, (req, res) => {
-  const noteIndex = notes.findIndex(n => n.id == req.params.id && n.userId === req.userId);
-  if (noteIndex === -1) {
-    return res.status(404).json({ error: 'Note not found' });
-  }
-  
-  notes.splice(noteIndex, 1);
-  saveNotes();
-  res.json({ message: 'Note deleted successfully' });
 });
 
 // Scratchpads endpoints
-app.get('/api/scratchpads', authenticateUser, (req, res) => {
-  const { page = 1, limit = 10, search = '', sortBy = 'createdAt' } = req.query;
-  let userScratchpads = scratchpads.filter(s => s.userId === req.userId);
-  
-  // Apply search filter
-  if (search) {
-    userScratchpads = userScratchpads.filter(scratchpad => 
-      scratchpad.title.toLowerCase().includes(search.toLowerCase()) ||
-      scratchpad.content.toLowerCase().includes(search.toLowerCase())
+app.get('/api/scratchpads', authenticateUser, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', sortBy = 'created_at' } = req.query;
+    
+    let query = 'SELECT * FROM scratchpads WHERE user_id = $1';
+    let params = [req.userId];
+    let paramCount = 1;
+    
+    if (search) {
+      paramCount++;
+      query += ` AND (title ILIKE $${paramCount} OR content ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+    }
+    
+    const orderBy = sortBy === 'title' ? 'title' : sortBy === 'updated_at' ? 'updated_at DESC' : 'created_at DESC';
+    query += ` ORDER BY ${orderBy}`;
+    query += ` LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+    
+    const result = await pool.query(query, params);
+    
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) FROM scratchpads WHERE user_id = $1';
+    let countParams = [req.userId];
+    if (search) {
+      countQuery += ' AND (title ILIKE $2 OR content ILIKE $2)';
+      countParams.push(`%${search}%`);
+    }
+    
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].count);
+    
+    res.json({ 
+      scratchpads: result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        workspaceId: row.workspace_id,
+        title: row.title,
+        content: row.content,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      })),
+      total,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      currentPage: parseInt(page)
+    });
+  } catch (error) {
+    console.error('Scratchpads fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch scratchpads' });
+  }
+});
+
+app.post('/api/scratchpads', authenticateUser, async (req, res) => {
+  try {
+    const { workspaceId, title, content } = req.body;
+    
+    const result = await pool.query(
+      'INSERT INTO scratchpads (user_id, workspace_id, title, content) VALUES ($1, $2, $3, $4) RETURNING *',
+      [req.userId, workspaceId, title, content]
     );
+    
+    const scratchpad = result.rows[0];
+    res.status(201).json({
+      id: scratchpad.id,
+      userId: scratchpad.user_id,
+      workspaceId: scratchpad.workspace_id,
+      title: scratchpad.title,
+      content: scratchpad.content,
+      createdAt: scratchpad.created_at,
+      updatedAt: scratchpad.updated_at
+    });
+  } catch (error) {
+    console.error('Scratchpad creation error:', error);
+    res.status(500).json({ error: 'Failed to create scratchpad' });
   }
-  
-  // Apply sorting
-  userScratchpads.sort((a, b) => {
-    if (sortBy === 'title') return a.title.localeCompare(b.title);
-    if (sortBy === 'updatedAt') return new Date(b.updatedAt) - new Date(a.updatedAt);
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
-  
-  // Apply pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + parseInt(limit);
-  const paginatedScratchpads = userScratchpads.slice(startIndex, endIndex);
-  
-  res.json({ 
-    scratchpads: paginatedScratchpads,
-    total: userScratchpads.length,
-    totalPages: Math.ceil(userScratchpads.length / limit),
-    currentPage: parseInt(page)
-  });
 });
 
-app.post('/api/scratchpads', authenticateUser, (req, res) => {
-  const { workspaceId, title, content } = req.body;
-  const scratchpad = {
-    id: Date.now(),
-    userId: req.userId,
-    workspaceId,
-    title,
-    content,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  scratchpads.push(scratchpad);
-  saveScratchpads();
-  res.status(201).json(scratchpad);
-});
-
-app.get('/api/scratchpads/:workspaceId', (req, res) => {
-  const workspaceScratchpads = scratchpads.filter(s => s.workspaceId == req.params.workspaceId);
-  res.json({ scratchpads: workspaceScratchpads });
-});
-
-app.put('/api/scratchpads/:id', (req, res) => {
-  const { title, content } = req.body;
-  const scratchpadIndex = scratchpads.findIndex(s => s.id == req.params.id);
-  
-  if (scratchpadIndex === -1) {
-    return res.status(404).json({ error: 'Scratchpad not found' });
+app.get('/api/scratchpads/:workspaceId', authenticateUser, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM scratchpads WHERE workspace_id = $1 AND user_id = $2',
+      [req.params.workspaceId, req.userId]
+    );
+    
+    res.json({ 
+      scratchpads: result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        workspaceId: row.workspace_id,
+        title: row.title,
+        content: row.content,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }))
+    });
+  } catch (error) {
+    console.error('Workspace scratchpads fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch scratchpads' });
   }
-  
-  scratchpads[scratchpadIndex] = {
-    ...scratchpads[scratchpadIndex],
-    title,
-    content,
-    updatedAt: new Date().toISOString()
-  };
-  
-  saveScratchpads();
-  res.json(scratchpads[scratchpadIndex]);
 });
 
-app.delete('/api/scratchpads/:id', (req, res) => {
-  const scratchpadIndex = scratchpads.findIndex(s => s.id == req.params.id);
-  if (scratchpadIndex === -1) {
-    return res.status(404).json({ error: 'Scratchpad not found' });
+app.put('/api/scratchpads/:id', authenticateUser, async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    
+    const result = await pool.query(
+      'UPDATE scratchpads SET title = $1, content = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 AND user_id = $4 RETURNING *',
+      [title, content, req.params.id, req.userId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Scratchpad not found' });
+    }
+    
+    const scratchpad = result.rows[0];
+    res.json({
+      id: scratchpad.id,
+      userId: scratchpad.user_id,
+      workspaceId: scratchpad.workspace_id,
+      title: scratchpad.title,
+      content: scratchpad.content,
+      createdAt: scratchpad.created_at,
+      updatedAt: scratchpad.updated_at
+    });
+  } catch (error) {
+    console.error('Scratchpad update error:', error);
+    res.status(500).json({ error: 'Failed to update scratchpad' });
   }
-  
-  scratchpads.splice(scratchpadIndex, 1);
-  saveScratchpads();
-  res.json({ message: 'Scratchpad deleted successfully' });
+});
+
+app.delete('/api/scratchpads/:id', authenticateUser, async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM scratchpads WHERE id = $1 AND user_id = $2 RETURNING *', [req.params.id, req.userId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Scratchpad not found' });
+    }
+    
+    res.json({ message: 'Scratchpad deleted successfully' });
+  } catch (error) {
+    console.error('Scratchpad delete error:', error);
+    res.status(500).json({ error: 'Failed to delete scratchpad' });
+  }
 });
 
 // Google OAuth endpoint
@@ -601,30 +758,29 @@ app.post('/api/auth/google', async (req, res) => {
     const { sub: googleId, email, name, picture } = payload;
     
     // Check if user exists
-    let user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    let result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    let user = result.rows[0];
     
     if (!user) {
       // Create new user from Google data
       const username = email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 4);
-      user = {
-        id: Date.now(),
-        fullName: name,
-        username,
-        email: email.toLowerCase(),
-        googleId,
-        avatar: picture,
-        createdAt: new Date().toISOString()
-      };
-      users.push(user);
-      saveUsers();
+      result = await pool.query(
+        'INSERT INTO users (full_name, username, email, google_id, avatar) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [name, username, email.toLowerCase(), googleId, picture]
+      );
+      user = result.rows[0];
     }
     
-    const { password, ...userWithoutPassword } = user;
-    
     res.json({
-      message: `Welcome, ${user.fullName}!`,
+      message: `Welcome, ${user.full_name}!`,
       accessToken: 'google-token-' + user.id + '-' + Date.now(),
-      user: userWithoutPassword
+      user: {
+        id: user.id,
+        fullName: user.full_name,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar
+      }
     });
     
   } catch (error) {
@@ -634,206 +790,329 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 // Auth endpoints
-app.post('/api/auth/register', (req, res) => {
-  const { fullName, email, password, confirmPassword } = req.body;
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { fullName, email, password, confirmPassword } = req.body;
 
-  if (!fullName || !email || !password || !confirmPassword) {
-    return res.status(400).json({ error: 'All fields are required' });
+    if (!fullName || !email || !password || !confirmPassword) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    // Check if user exists
+    const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Generate username from email
+    const username = email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 4);
+
+    // Create new user
+    const result = await pool.query(
+      'INSERT INTO users (full_name, username, email, password) VALUES ($1, $2, $3, $4) RETURNING *',
+      [fullName, username, email.toLowerCase(), password]
+    );
+    const newUser = result.rows[0];
+
+    res.status(201).json({
+      message: 'Registration successful! You can now sign in.',
+      token: 'token-' + newUser.id,
+      user: {
+        id: newUser.id,
+        fullName: newUser.full_name,
+        username: newUser.username,
+        email: newUser.email
+      }
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
   }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({ error: 'Passwords do not match' });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters' });
-  }
-
-  const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-  if (existingUser) {
-    return res.status(400).json({ error: 'Email already registered' });
-  }
-
-  // Generate username from email
-  const username = email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 4);
-
-  const newUser = {
-    id: Date.now(),
-    fullName,
-    username,
-    email: email.toLowerCase(),
-    password,
-    createdAt: new Date().toISOString()
-  };
-
-  users.push(newUser);
-  saveUsers();
-
-  const { password: _, ...userWithoutPassword } = newUser;
-
-  res.status(201).json({
-    message: 'Registration successful! You can now sign in.',
-    token: 'token-' + newUser.id,
-    user: userWithoutPassword
-  });
 });
 
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
 
-  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    const user = result.rows[0];
 
-  if (!user) {
-    return res.status(404).json({
-      error: "Account not found. Please register first.",
-      needsSignup: true
+    if (!user) {
+      return res.status(404).json({
+        error: "Account not found. Please register first.",
+        needsSignup: true
+      });
+    }
+
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
+
+    res.json({
+      message: `Welcome back, ${user.full_name}!`,
+      token: 'token-' + user.id + '-' + Date.now(),
+      user: {
+        id: user.id,
+        fullName: user.full_name,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar
+      }
     });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
   }
-
-  if (user.password !== password) {
-    return res.status(401).json({ error: 'Incorrect password' });
-  }
-
-  const { password: _, ...userWithoutPassword } = user;
-
-  res.json({
-    message: `Welcome back, ${user.fullName}!`,
-    token: 'token-' + user.id + '-' + Date.now(),
-    user: userWithoutPassword
-  });
 });
 
 // Projects endpoints
-app.get('/api/projects', authenticateUser, (req, res) => {
-  const { page = 1, limit = 12, search = '', type = '', language = '', sortBy = 'lastOpened' } = req.query;
-  let userWorkspaces = workspaces.filter(w => w.userId === req.userId);
-  
-  // Apply search filter
-  if (search) {
-    userWorkspaces = userWorkspaces.filter(project => 
-      project.title.toLowerCase().includes(search.toLowerCase()) ||
-      (project.description && project.description.toLowerCase().includes(search.toLowerCase()))
+app.get('/api/projects', authenticateUser, async (req, res) => {
+  try {
+    const { page = 1, limit = 12, search = '', type = '', language = '', sortBy = 'last_opened_at' } = req.query;
+    
+    let query = 'SELECT * FROM workspaces WHERE user_id = $1';
+    let params = [req.userId];
+    let paramCount = 1;
+    
+    if (search) {
+      paramCount++;
+      query += ` AND (title ILIKE $${paramCount} OR description ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+    }
+    
+    if (type && type !== 'all') {
+      paramCount++;
+      query += ` AND type = $${paramCount}`;
+      params.push(type);
+    }
+    
+    if (language && language !== 'all') {
+      paramCount++;
+      query += ` AND language = $${paramCount}`;
+      params.push(language);
+    }
+    
+    const orderBy = sortBy === 'title' ? 'title' : sortBy === 'created' ? 'created_at DESC' : 'last_opened_at DESC';
+    query += ` ORDER BY ${orderBy}`;
+    query += ` LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+    
+    const result = await pool.query(query, params);
+    
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) FROM workspaces WHERE user_id = $1';
+    let countParams = [req.userId];
+    if (search) {
+      countQuery += ' AND (title ILIKE $2 OR description ILIKE $2)';
+      countParams.push(`%${search}%`);
+    }
+    if (type && type !== 'all') {
+      countQuery += ` AND type = $${countParams.length + 1}`;
+      countParams.push(type);
+    }
+    if (language && language !== 'all') {
+      countQuery += ` AND language = $${countParams.length + 1}`;
+      countParams.push(language);
+    }
+    
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].count);
+    
+    res.json({
+      projects: result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        title: row.title,
+        description: row.description,
+        type: row.type,
+        language: row.language,
+        tags: row.tags,
+        content: row.content,
+        createdAt: row.created_at,
+        lastOpenedAt: row.last_opened_at
+      })),
+      total,
+      totalPages: Math.ceil(total / parseInt(limit)),
+      currentPage: parseInt(page)
+    });
+  } catch (error) {
+    console.error('Projects fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch projects' });
+  }
+});
+
+app.get('/api/projects/stats', authenticateUser, async (req, res) => {
+  try {
+    const workspacesResult = await pool.query('SELECT COUNT(*) FROM workspaces WHERE user_id = $1', [req.userId]);
+    const historyResult = await pool.query('SELECT COUNT(*) FROM history WHERE user_id = $1', [req.userId]);
+    const weeklyResult = await pool.query(
+      'SELECT COUNT(*) FROM history WHERE user_id = $1 AND created_at > $2',
+      [req.userId, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)]
     );
+    
+    res.json({
+      totalProjects: parseInt(workspacesResult.rows[0].count),
+      totalAnalyses: parseInt(historyResult.rows[0].count),
+      totalProblems: 0,
+      weeklyActivity: parseInt(weeklyResult.rows[0].count)
+    });
+  } catch (error) {
+    console.error('Stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch stats' });
   }
-  
-  // Apply type filter
-  if (type && type !== 'all') {
-    userWorkspaces = userWorkspaces.filter(project => project.type === type);
-  }
-  
-  // Apply language filter
-  if (language && language !== 'all') {
-    userWorkspaces = userWorkspaces.filter(project => project.language === language);
-  }
-  
-  // Apply sorting
-  userWorkspaces.sort((a, b) => {
-    if (sortBy === 'title') return a.title.localeCompare(b.title);
-    if (sortBy === 'created') return new Date(b.createdAt) - new Date(a.createdAt);
-    return new Date(b.lastOpenedAt) - new Date(a.lastOpenedAt);
-  });
-  
-  // Apply pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + parseInt(limit);
-  const paginatedProjects = userWorkspaces.slice(startIndex, endIndex);
-  
-  res.json({
-    projects: paginatedProjects,
-    total: userWorkspaces.length,
-    totalPages: Math.ceil(userWorkspaces.length / limit),
-    currentPage: parseInt(page)
-  });
 });
 
-app.get('/api/projects/stats', authenticateUser, (req, res) => {
-  const userWorkspaces = workspaces.filter(w => w.userId === req.userId);
-  const userHistory = history.filter(h => h.userId === req.userId);
-  
-  res.json({
-    totalProjects: userWorkspaces.length,
-    totalAnalyses: userHistory.length,
-    totalProblems: 0,
-    weeklyActivity: userHistory.filter(h => 
-      new Date(h.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    ).length
-  });
-});
-
-app.post('/api/projects', authenticateUser, (req, res) => {
-  const { title, description, language = 'javascript', tags = [] } = req.body;
-  
-  const workspace = {
-    id: Date.now(),
-    userId: req.userId,
-    title,
-    description,
-    type: 'sandbox',
-    language,
-    tags,
-    content: getStarterCode(language),
-    createdAt: new Date().toISOString(),
-    lastOpenedAt: new Date().toISOString()
-  };
-  
-  workspaces.push(workspace);
-  saveWorkspaces();
-  res.status(201).json(workspace);
-});
-
-app.get('/api/projects/:id', (req, res) => {
-  const workspace = workspaces.find(w => w.id == req.params.id);
-  if (!workspace) {
-    return res.status(404).json({ error: 'Workspace not found' });
-  }
-  
-  workspace.lastOpenedAt = new Date().toISOString();
-  saveWorkspaces();
-  
-  res.json({
-    ...workspace,
-    Files: [{
-      id: 1,
-      name: getDefaultFileName(workspace.language),
-      content: workspace.content,
+app.post('/api/projects', authenticateUser, async (req, res) => {
+  try {
+    const { title, description, language = 'javascript', tags = [] } = req.body;
+    
+    const result = await pool.query(
+      'INSERT INTO workspaces (user_id, title, description, type, language, tags, content) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [req.userId, title, description, 'sandbox', language, tags, getStarterCode(language)]
+    );
+    
+    const workspace = result.rows[0];
+    res.status(201).json({
+      id: workspace.id,
+      userId: workspace.user_id,
+      title: workspace.title,
+      description: workspace.description,
+      type: workspace.type,
       language: workspace.language,
-      isMain: true
-    }]
-  });
+      tags: workspace.tags,
+      content: workspace.content,
+      createdAt: workspace.created_at,
+      lastOpenedAt: workspace.last_opened_at
+    });
+  } catch (error) {
+    console.error('Project creation error:', error);
+    res.status(500).json({ error: 'Failed to create project' });
+  }
 });
 
-app.put('/api/projects/:id', (req, res) => {
-  const { title, description, tags, content, lastOpenedAt } = req.body;
-  const workspaceIndex = workspaces.findIndex(w => w.id == req.params.id);
-  
-  if (workspaceIndex === -1) {
-    return res.status(404).json({ error: 'Workspace not found' });
+app.get('/api/projects/:id', authenticateUser, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM workspaces WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    const workspace = result.rows[0];
+    
+    if (!workspace) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+    
+    // Update last opened time
+    await pool.query('UPDATE workspaces SET last_opened_at = CURRENT_TIMESTAMP WHERE id = $1', [req.params.id]);
+    
+    res.json({
+      id: workspace.id,
+      userId: workspace.user_id,
+      title: workspace.title,
+      description: workspace.description,
+      type: workspace.type,
+      language: workspace.language,
+      tags: workspace.tags,
+      content: workspace.content,
+      createdAt: workspace.created_at,
+      lastOpenedAt: new Date().toISOString(),
+      Files: [{
+        id: 1,
+        name: getDefaultFileName(workspace.language),
+        content: workspace.content,
+        language: workspace.language,
+        isMain: true
+      }]
+    });
+  } catch (error) {
+    console.error('Project fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch project' });
   }
-  
-  if (title) workspaces[workspaceIndex].title = title;
-  if (description) workspaces[workspaceIndex].description = description;
-  if (tags) workspaces[workspaceIndex].tags = tags;
-  if (content) workspaces[workspaceIndex].content = content;
-  if (lastOpenedAt) workspaces[workspaceIndex].lastOpenedAt = lastOpenedAt;
-  
-  saveWorkspaces();
-  res.json(workspaces[workspaceIndex]);
 });
 
-app.delete('/api/projects/:id', (req, res) => {
-  const workspaceIndex = workspaces.findIndex(w => w.id == req.params.id);
-  if (workspaceIndex === -1) {
-    return res.status(404).json({ error: 'Workspace not found' });
+app.put('/api/projects/:id', authenticateUser, async (req, res) => {
+  try {
+    const { title, description, tags, content, lastOpenedAt } = req.body;
+    
+    const updates = [];
+    const values = [];
+    let paramCount = 0;
+    
+    if (title) {
+      updates.push(`title = $${++paramCount}`);
+      values.push(title);
+    }
+    if (description) {
+      updates.push(`description = $${++paramCount}`);
+      values.push(description);
+    }
+    if (tags) {
+      updates.push(`tags = $${++paramCount}`);
+      values.push(tags);
+    }
+    if (content) {
+      updates.push(`content = $${++paramCount}`);
+      values.push(content);
+    }
+    if (lastOpenedAt) {
+      updates.push(`last_opened_at = $${++paramCount}`);
+      values.push(lastOpenedAt);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+    
+    values.push(req.params.id, req.userId);
+    const query = `UPDATE workspaces SET ${updates.join(', ')} WHERE id = $${paramCount + 1} AND user_id = $${paramCount + 2} RETURNING *`;
+    
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+    
+    const workspace = result.rows[0];
+    res.json({
+      id: workspace.id,
+      userId: workspace.user_id,
+      title: workspace.title,
+      description: workspace.description,
+      type: workspace.type,
+      language: workspace.language,
+      tags: workspace.tags,
+      content: workspace.content,
+      createdAt: workspace.created_at,
+      lastOpenedAt: workspace.last_opened_at
+    });
+  } catch (error) {
+    console.error('Project update error:', error);
+    res.status(500).json({ error: 'Failed to update project' });
   }
-  
-  workspaces.splice(workspaceIndex, 1);
-  saveWorkspaces();
-  res.json({ message: 'Workspace deleted successfully' });
+});
+
+app.delete('/api/projects/:id', authenticateUser, async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM workspaces WHERE id = $1 AND user_id = $2 RETURNING *', [req.params.id, req.userId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+    
+    res.json({ message: 'Workspace deleted successfully' });
+  } catch (error) {
+    console.error('Project delete error:', error);
+    res.status(500).json({ error: 'Failed to delete project' });
+  }
 });
 
 // Code execution endpoints
