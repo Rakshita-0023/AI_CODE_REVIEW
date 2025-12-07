@@ -89,6 +89,18 @@ export const handler = async (event, context) => {
         Code to analyze:
         ${code}`;
                 break;
+            case "chat":
+                // For chat, we return a simpler JSON structure
+                prompt = `
+                You are a helpful AI coding assistant.
+                User Question: ${code}
+                
+                Return ONLY a raw JSON object with this structure:
+                {
+                  "response": "Your helpful answer here (markdown allowed)"
+                }
+                `;
+                break;
             default:
                 return {
                     statusCode: 400,

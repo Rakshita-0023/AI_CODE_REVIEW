@@ -471,26 +471,16 @@ app.post('/api/execute/run', async (req, res) => {
         break;
 
       case 'java':
-        // Java is tricky because of class names. We'll assume a standard Main class or try to detect it.
-        // For simplicity, we'll wrap it in a Main class if not present, or save as Main.java
-        filePath = path.join(tempDir, 'Main.java');
-        // Simple heuristic: if class name is not Main, this might fail. 
-        // Ideally we parse the class name.
-        if (!code.includes('class Main')) {
-          // Very basic wrapper if missing class
-          if (!code.includes('class ')) {
-            fs.writeFileSync(filePath, `public class Main { public static void main(String[] args) { ${code} } }`);
-          } else {
-            // User provided class, hope it's Main or we need to parse it
-            // For now, just save as Main.java and hope user used Main class
-            fs.writeFileSync(filePath, code);
-          }
-        } else {
-          fs.writeFileSync(filePath, code);
-        }
+        // Extract public class name
+        const classMatch = code.match(/public\s+class\s+(\w+)/);
+        const className = classMatch ? classMatch[1] : 'Main';
+
+        filePath = path.join(tempDir, `${className}.java`);
+        fs.writeFileSync(filePath, code);
 
         const classPath = tempDir;
-        command = `javac "${filePath}" && java -cp "${classPath}" Main`;
+        // Compile and run
+        command = `javac "${filePath}" && java -cp "${classPath}" ${className}`;
         if (input) command += ` < "${inputPath}"`;
         break;
 
