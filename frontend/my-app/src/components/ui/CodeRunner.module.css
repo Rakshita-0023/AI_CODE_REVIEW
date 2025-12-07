@@ -1,10 +1,11 @@
 .container {
-  background: var(--bg-secondary);
+  background: #111827;
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid #374151;
+  color: #ffffff;
 }
 
 .header {
@@ -29,7 +30,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   margin-bottom: 0.25rem;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .suggestionIcon {
@@ -41,15 +42,13 @@
 
 .input {
   padding: 0.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid #374151;
   border-radius: 0.5rem;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  background: #1f2937;
+  color: #ffffff;
   font-size: 0.75rem;
   min-height: 2.5rem;
-  /* Increased height */
   resize: vertical;
-  /* Allow vertical resizing */
   transition: all 0.3s ease;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
@@ -61,7 +60,7 @@
 }
 
 .input::placeholder {
-  color: var(--text-muted);
+  color: #9ca3af;
 }
 
 .loadingContainer {
@@ -73,14 +72,14 @@
 .loadingLabel {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .loadingBox {
-  background: var(--bg-secondary);
+  background: #1f2937;
   padding: 1rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid #374151;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,7 +106,7 @@
 .outputLabel {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .testResult {
@@ -118,11 +117,11 @@
 }
 
 .testResult.success {
-  color: var(--success);
+  color: #10b981;
 }
 
 .testResult.error {
-  color: var(--error);
+  color: #ef4444;
 }
 
 .testIcon {
@@ -131,22 +130,21 @@
 }
 
 .output {
-  background: var(--bg-secondary);
+  background: #1f2937;
   padding: 0.5rem;
   border-radius: 0.5rem;
   font-size: 0.75rem;
   overflow: auto;
   max-height: 8rem;
-  /* Increased max height */
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
+  border: 1px solid #374151;
+  color: #e5e7eb;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   white-space: pre-wrap;
 }
 
 .hint {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: #9ca3af;
   text-align: center;
 }
 

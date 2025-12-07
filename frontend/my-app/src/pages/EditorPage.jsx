@@ -15,8 +15,7 @@ const EditorPage = () => {
   const { projectId } = useParams();
   const location = useLocation();
   const { currentProject, setCurrentProject, code, setCode, currentAnalysis } = useStore();
-  const [showAIChat, setShowAIChat] = useState(false);
-  const [showScratchpad, setShowScratchpad] = useState(false);
+  const [activePanel, setActivePanel] = useState('scratchpad'); // 'scratchpad', 'ai-chat', 'results'
 
   useEffect(() => {
     const loadProject = async () => {
@@ -67,6 +66,13 @@ const EditorPage = () => {
     return () => clearTimeout(timeoutId);
   }, [code, currentProject]);
 
+  // Auto-switch to results panel when analysis is completed
+  useEffect(() => {
+    if (currentAnalysis && activePanel !== 'ai-chat') {
+      setActivePanel('results');
+    }
+  }, [currentAnalysis]);
+
   if (!currentProject) {
     return (
       <div className="h-screen bg-black text-white flex items-center justify-center">
@@ -82,8 +88,9 @@ const EditorPage = () => {
     <div className="h-screen bg-black text-white flex flex-col">
       {/* Navbar */}
       <EditorNavbar 
-        onToggleAIChat={() => setShowAIChat(!showAIChat)} 
-        onToggleScratchpad={() => setShowScratchpad(!showScratchpad)}
+        onToggleAIChat={() => setActivePanel(activePanel === 'ai-chat' ? 'scratchpad' : 'ai-chat')} 
+        onToggleScratchpad={() => setActivePanel(activePanel === 'scratchpad' ? 'results' : 'scratchpad')}
+        activePanel={activePanel}
       />
 
       {/* Main Content */}
@@ -103,11 +110,11 @@ const EditorPage = () => {
             />
           }
           rightPane={
-            showAIChat ? (
-              <AIChatPanel onClose={() => setShowAIChat(false)} />
-            ) : showScratchpad ? (
+            activePanel === 'ai-chat' ? (
+              <AIChatPanel onClose={() => setActivePanel('scratchpad')} />
+            ) : activePanel === 'scratchpad' ? (
               <ScratchpadPanel />
-            ) : currentAnalysis ? (
+            ) : activePanel === 'results' && currentAnalysis ? (
               <ResultsPanel />
             ) : (
               <ScratchpadPanel />

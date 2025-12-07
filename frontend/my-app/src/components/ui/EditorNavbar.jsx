@@ -12,7 +12,7 @@ import useStore from '../../store/useStore';
 import { aiAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
-const EditorNavbar = ({ onToggleAIChat, onToggleScratchpad }) => {
+const EditorNavbar = ({ onToggleAIChat, onToggleScratchpad, activePanel }) => {
   const navigate = useNavigate();
   const {
     code,
@@ -147,20 +147,30 @@ const EditorNavbar = ({ onToggleAIChat, onToggleScratchpad }) => {
           
           <button
             onClick={onToggleScratchpad}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 transition-colors duration-200"
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
+              activePanel === 'scratchpad' 
+                ? 'bg-gray-700 hover:bg-gray-800 border border-gray-500' 
+                : 'bg-gray-600 hover:bg-gray-700'
+            }`}
             title="Notes"
           >
             <DocumentTextIcon className="w-4 h-4" />
             <span className="text-sm font-medium">Notes</span>
+            {activePanel === 'scratchpad' && <div className="w-2 h-2 bg-white rounded-full"></div>}
           </button>
           
           <button
             onClick={onToggleAIChat}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-purple-500/25"
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+              activePanel === 'ai-chat'
+                ? 'bg-gradient-to-r from-purple-700 to-blue-700 shadow-lg shadow-purple-500/50'
+                : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-purple-500/25'
+            }`}
             title="AI Chat Assistant"
           >
             <SparklesIcon className="w-4 h-4" />
             <span className="text-sm font-medium">AI Chat</span>
+            {activePanel === 'ai-chat' && <div className="w-2 h-2 bg-white rounded-full"></div>}
           </button>
           
           <button
