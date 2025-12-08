@@ -22,26 +22,53 @@ const PORT = process.env.PORT || 5001;
 const execAsync = promisify(exec);
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173', 
-    'http://localhost:3000', 
-    'http://localhost:3456',
-    'https://codesenseai.netlify.app',
-    'https://ai-code-review-lmle.onrender.com'
-  ],
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-// Security headers for OAuth
+// Security headers
 app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   next();
 });
 
 app.use(express.json());
+
+// Rate limiting for AI endpoints
+const aiRequestCounts = new Map();
+const AI_RATE_LIMIT = 10; // requests per hour
+const RATE_WINDOW = 60 * 60 * 1000; // 1 hour
+
+const aiRateLimit = (req, res, next) => {
+  const userId = req.userId;
+  const now = Date.now();
+  const userKey = `ai_${userId}`;
+  
+  if (!aiRequestCounts.has(userKey)) {
+    aiRequestCounts.set(userKey, { count: 1, resetTime: now + RATE_WINDOW });
+    return next();
+  }
+  
+  const userLimit = aiRequestCounts.get(userKey);
+  
+  if (now > userLimit.resetTime) {
+    aiRequestCounts.set(userKey, { count: 1, resetTime: now + RATE_WINDOW });
+    return next();
+  }
+  
+  if (userLimit.count >= AI_RATE_LIMIT) {
+    return res.status(429).json({ 
+      error: 'Rate limit exceeded. Please try again later.',
+      response: 'You have reached the hourly limit for AI requests. Please wait before making more requests.' 
+    });
+  }
+  
+  userLimit.count++;
+  next();
+};
 
 // Authentication middleware
 const authenticateUser = (req, res, next) => {
@@ -52,19 +79,26 @@ const authenticateUser = (req, res, next) => {
   }
 
   try {
+    let userId;
+    
     // Extract user ID from token
     if (token.startsWith('token-')) {
-      const userId = parseInt(token.split('-')[1]);
-      req.userId = userId;
+      userId = parseInt(token.split('-')[1]);
     } else if (token.startsWith('google-token-')) {
-      const userId = parseInt(token.split('-')[2]);
-      req.userId = userId;
+      userId = parseInt(token.split('-')[2]);
     } else {
       return res.status(401).json({ error: 'Invalid token format' });
     }
     
+    // Check if userId is valid
+    if (isNaN(userId) || userId <= 0) {
+      return res.status(401).json({ error: 'Invalid user ID in token' });
+    }
+    
+    req.userId = userId;
     next();
   } catch (error) {
+    console.error('Auth middleware error:', error);
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -188,6 +222,18 @@ const initDatabase = async () => {
       )
     `);
     
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS trash (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        original_id INTEGER NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        content JSONB,
+        deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
     console.log('Database tables initialized');
   } catch (error) {
     console.error('Database initialization error:', error);
@@ -198,7 +244,7 @@ const initDatabase = async () => {
 initDatabase();
 
 // AI Chat endpoint with Gemini 2.5 Flash integration
-app.post('/api/ai/chat', authenticateUser, async (req, res) => {
+app.post('/api/ai/chat', authenticateUser, aiRateLimit, async (req, res) => {
   const { message, codeContext, workspaceId } = req.body;
   
   try {
@@ -256,7 +302,7 @@ Provide a clear, helpful response. If analyzing code, be specific about issues a
 });
 
 // AI Debug endpoint with Gemini integration
-app.post('/api/ai/debug', authenticateUser, async (req, res) => {
+app.post('/api/ai/debug', authenticateUser, aiRateLimit, async (req, res) => {
   const { code, language, workspaceId } = req.body;
   
   try {
@@ -310,8 +356,81 @@ Format your response clearly with sections for issues and fixes.`;
   }
 });
 
+// AI Approaches endpoint
+app.post('/api/ai/approaches', authenticateUser, aiRateLimit, async (req, res) => {
+  const { code, language, workspaceId } = req.body;
+  
+  try {
+    let response;
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    
+    if (geminiApiKey) {
+      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      const genAI = new GoogleGenerativeAI(geminiApiKey);
+      
+      try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        
+        const prompt = `You are an expert programmer. Analyze the following ${language || 'code'} and suggest alternative approaches, algorithms, or design patterns.
+
+Code to analyze:
+\`\`\`${language || ''}
+${code}
+\`\`\`
+
+Provide:
+1. Alternative algorithms or approaches
+2. Different design patterns that could be used
+3. More efficient or cleaner implementations
+4. Code examples for each approach
+
+Focus on practical alternatives that improve the code.`;
+        
+        const result = await model.generateContent(prompt);
+        response = result.response.text();
+      } catch (error) {
+        console.error('Gemini approaches error:', error);
+        response = 'AI approaches service is temporarily unavailable. Consider reviewing your code for alternative algorithms, design patterns, or more efficient implementations.';
+      }
+    } else {
+      response = 'AI approaches analysis requires GEMINI_API_KEY configuration. Consider exploring different algorithms, design patterns, or refactoring approaches for your code.';
+    }
+    
+    // Save to history
+    await pool.query(
+      'INSERT INTO history (user_id, workspace_id, type, title, code, language, result) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [req.userId, workspaceId || null, 'approaches', 'Alternative Approaches', code, language, JSON.stringify({ response })]
+    );
+    
+    res.json({ response, language });
+  } catch (error) {
+    console.error('Approaches error:', error);
+    res.status(500).json({ 
+      error: 'Failed to analyze approaches',
+      response: 'Sorry, I encountered an error while analyzing approaches. Please try again.' 
+    });
+  }
+});
+
+// Netlify function fallback endpoint
+app.post('/api/.netlify/functions/analyze', authenticateUser, async (req, res) => {
+  // Redirect to appropriate AI endpoint based on request
+  const { type = 'review' } = req.body;
+  
+  switch (type) {
+    case 'debug':
+      return req.app._router.handle({ ...req, url: '/api/ai/debug', method: 'POST' }, res);
+    case 'optimize':
+      return req.app._router.handle({ ...req, url: '/api/ai/optimize', method: 'POST' }, res);
+    case 'approaches':
+      return req.app._router.handle({ ...req, url: '/api/ai/approaches', method: 'POST' }, res);
+    default:
+      return req.app._router.handle({ ...req, url: '/api/ai/review', method: 'POST' }, res);
+  }
+});
+
 // AI Optimize endpoint
-app.post('/api/ai/optimize', authenticateUser, async (req, res) => {
+app.post('/api/ai/optimize', authenticateUser, aiRateLimit, async (req, res) => {
   const { code, language, workspaceId } = req.body;
   
   try {
@@ -593,13 +712,24 @@ app.put('/api/notes/:id', authenticateUser, async (req, res) => {
 
 app.delete('/api/notes/:id', authenticateUser, async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM notes WHERE id = $1 AND user_id = $2 RETURNING *', [req.params.id, req.userId]);
+    const result = await pool.query('SELECT * FROM notes WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Note not found' });
     }
     
-    res.json({ message: 'Note deleted successfully' });
+    const note = result.rows[0];
+    
+    // Move to trash
+    await pool.query(
+      'INSERT INTO trash (user_id, original_id, type, title, content) VALUES ($1, $2, $3, $4, $5)',
+      [req.userId, note.id, 'note', note.title, JSON.stringify(note)]
+    );
+    
+    // Delete from notes
+    await pool.query('DELETE FROM notes WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    
+    res.json({ message: 'Note moved to trash successfully' });
   } catch (error) {
     console.error('Note delete error:', error);
     res.status(500).json({ error: 'Failed to delete note' });
@@ -739,13 +869,24 @@ app.put('/api/scratchpads/:id', authenticateUser, async (req, res) => {
 
 app.delete('/api/scratchpads/:id', authenticateUser, async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM scratchpads WHERE id = $1 AND user_id = $2 RETURNING *', [req.params.id, req.userId]);
+    const result = await pool.query('SELECT * FROM scratchpads WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Scratchpad not found' });
     }
     
-    res.json({ message: 'Scratchpad deleted successfully' });
+    const scratchpad = result.rows[0];
+    
+    // Move to trash
+    await pool.query(
+      'INSERT INTO trash (user_id, original_id, type, title, content) VALUES ($1, $2, $3, $4, $5)',
+      [req.userId, scratchpad.id, 'scratchpad', scratchpad.title, JSON.stringify(scratchpad)]
+    );
+    
+    // Delete from scratchpads
+    await pool.query('DELETE FROM scratchpads WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    
+    res.json({ message: 'Scratchpad moved to trash successfully' });
   } catch (error) {
     console.error('Scratchpad delete error:', error);
     res.status(500).json({ error: 'Failed to delete scratchpad' });
@@ -805,6 +946,31 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
+// User verification endpoint
+app.get('/api/auth/me', authenticateUser, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.userId]);
+    const user = result.rows[0];
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({
+      user: {
+        id: user.id,
+        fullName: user.full_name,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    console.error('User verification error:', error);
+    res.status(500).json({ error: 'Failed to verify user' });
+  }
+});
+
 // Auth endpoints
 app.post('/api/auth/register', async (req, res) => {
   try {
@@ -838,9 +1004,12 @@ app.post('/api/auth/register', async (req, res) => {
     );
     const newUser = result.rows[0];
 
+    const token = 'token-' + newUser.id + '-' + Date.now();
+    
     res.status(201).json({
       message: 'Registration successful! You can now sign in.',
-      token: 'token-' + newUser.id,
+      accessToken: token,
+      token: token,
       user: {
         id: newUser.id,
         fullName: newUser.full_name,
@@ -876,9 +1045,12 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Incorrect password' });
     }
 
+    const token = 'token-' + user.id + '-' + Date.now();
+    
     res.json({
       message: `Welcome back, ${user.full_name}!`,
-      token: 'token-' + user.id + '-' + Date.now(),
+      accessToken: token,
+      token: token,
       user: {
         id: user.id,
         fullName: user.full_name,
@@ -891,6 +1063,10 @@ app.post('/api/auth/login', async (req, res) => {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.json({ message: 'Logged out successfully' });
 });
 
 // Projects endpoints
@@ -1118,13 +1294,24 @@ app.put('/api/projects/:id', authenticateUser, async (req, res) => {
 
 app.delete('/api/projects/:id', authenticateUser, async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM workspaces WHERE id = $1 AND user_id = $2 RETURNING *', [req.params.id, req.userId]);
+    const result = await pool.query('SELECT * FROM workspaces WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Workspace not found' });
     }
     
-    res.json({ message: 'Workspace deleted successfully' });
+    const workspace = result.rows[0];
+    
+    // Move to trash
+    await pool.query(
+      'INSERT INTO trash (user_id, original_id, type, title, content) VALUES ($1, $2, $3, $4, $5)',
+      [req.userId, workspace.id, 'project', workspace.title, JSON.stringify(workspace)]
+    );
+    
+    // Delete from workspaces
+    await pool.query('DELETE FROM workspaces WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    
+    res.json({ message: 'Project moved to trash successfully' });
   } catch (error) {
     console.error('Project delete error:', error);
     res.status(500).json({ error: 'Failed to delete project' });
@@ -1249,49 +1436,124 @@ function getStarterCode(language) {
 }
 
 // Trash endpoints
-app.get('/api/trash', (req, res) => {
-  const { page = 1, limit = 12, search = '', type = '', sortBy = 'deletedAt' } = req.query;
-  
+app.get('/api/trash', authenticateUser, async (req, res) => {
   try {
-    let trashedItems = [];
-    if (typeof localStorage !== 'undefined') {
-      trashedItems = JSON.parse(localStorage.getItem('trashedItems') || '[]');
-    }
+    const { page = 1, limit = 12, search = '', type = '', sortBy = 'deleted_at' } = req.query;
     
-    // Apply search filter
+    let query = 'SELECT * FROM trash WHERE user_id = $1';
+    let params = [req.userId];
+    let paramCount = 1;
+    
     if (search) {
-      trashedItems = trashedItems.filter(item => 
-        (item.title && item.title.toLowerCase().includes(search.toLowerCase())) ||
-        (item.name && item.name.toLowerCase().includes(search.toLowerCase())) ||
-        (item.description && item.description.toLowerCase().includes(search.toLowerCase()))
-      );
+      paramCount++;
+      query += ` AND title ILIKE $${paramCount}`;
+      params.push(`%${search}%`);
     }
     
-    // Apply type filter
     if (type && type !== 'all') {
-      trashedItems = trashedItems.filter(item => item.type === type);
+      paramCount++;
+      query += ` AND type = $${paramCount}`;
+      params.push(type);
     }
     
-    // Apply sorting
-    trashedItems.sort((a, b) => {
-      if (sortBy === 'title') return (a.title || a.name || '').localeCompare(b.title || b.name || '');
-      if (sortBy === 'type') return a.type.localeCompare(b.type);
-      return new Date(b.deletedAt) - new Date(a.deletedAt);
-    });
+    const orderBy = sortBy === 'title' ? 'title' : sortBy === 'type' ? 'type' : 'deleted_at DESC';
+    query += ` ORDER BY ${orderBy}`;
+    query += ` LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
     
-    // Apply pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + parseInt(limit);
-    const paginatedItems = trashedItems.slice(startIndex, endIndex);
+    const result = await pool.query(query, params);
+    
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) FROM trash WHERE user_id = $1';
+    let countParams = [req.userId];
+    if (search) {
+      countQuery += ' AND title ILIKE $2';
+      countParams.push(`%${search}%`);
+    }
+    if (type && type !== 'all') {
+      countQuery += ` AND type = $${countParams.length + 1}`;
+      countParams.push(type);
+    }
+    
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].count);
     
     res.json({
-      items: paginatedItems,
-      total: trashedItems.length,
-      totalPages: Math.ceil(trashedItems.length / limit),
+      items: result.rows.map(row => ({
+        id: row.id,
+        originalId: row.original_id,
+        type: row.type,
+        title: row.title,
+        content: row.content,
+        deletedAt: row.deleted_at
+      })),
+      total,
+      totalPages: Math.ceil(total / parseInt(limit)),
       currentPage: parseInt(page)
     });
   } catch (error) {
-    res.json({ items: [], total: 0, totalPages: 0, currentPage: 1 });
+    console.error('Trash fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch trash items' });
+  }
+});
+
+// Restore from trash
+app.post('/api/trash/:id/restore', authenticateUser, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM trash WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash item not found' });
+    }
+    
+    const trashItem = result.rows[0];
+    const originalData = trashItem.content;
+    
+    // Restore based on type
+    switch (trashItem.type) {
+      case 'note':
+        await pool.query(
+          'INSERT INTO notes (user_id, title, content, folder, tags) VALUES ($1, $2, $3, $4, $5)',
+          [req.userId, originalData.title, originalData.content, originalData.folder, originalData.tags]
+        );
+        break;
+      case 'scratchpad':
+        await pool.query(
+          'INSERT INTO scratchpads (user_id, workspace_id, title, content) VALUES ($1, $2, $3, $4)',
+          [req.userId, originalData.workspace_id, originalData.title, originalData.content]
+        );
+        break;
+      case 'project':
+        await pool.query(
+          'INSERT INTO workspaces (user_id, title, description, type, language, tags, content) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+          [req.userId, originalData.title, originalData.description, originalData.type, originalData.language, originalData.tags, originalData.content]
+        );
+        break;
+    }
+    
+    // Remove from trash
+    await pool.query('DELETE FROM trash WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    
+    res.json({ message: `${trashItem.type} restored successfully` });
+  } catch (error) {
+    console.error('Restore error:', error);
+    res.status(500).json({ error: 'Failed to restore item' });
+  }
+});
+
+// Permanently delete from trash
+app.delete('/api/trash/:id', authenticateUser, async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM trash WHERE id = $1 AND user_id = $2 RETURNING *', [req.params.id, req.userId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash item not found' });
+    }
+    
+    res.json({ message: 'Item permanently deleted' });
+  } catch (error) {
+    console.error('Permanent delete error:', error);
+    res.status(500).json({ error: 'Failed to permanently delete item' });
   }
 });
 
