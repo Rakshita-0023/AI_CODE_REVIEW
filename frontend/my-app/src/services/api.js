@@ -9,9 +9,18 @@ const api = axios.create({
   },
 });
 
+export const getStoredAuthToken = () =>
+  localStorage.getItem('accessToken') || localStorage.getItem('token') || '';
+
+export const isBackendCompatibleToken = (token = getStoredAuthToken()) => {
+  if (!token) return false;
+  if (token.startsWith('token-') || token.startsWith('google-token-')) return true;
+  return token.split('.').length === 3;
+};
+
 // Request interceptor to add auth token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+  const token = getStoredAuthToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -23,8 +32,15 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = originalRequest?.url || '';
+    const canRefresh =
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !requestUrl.includes('/auth/refresh') &&
+      isBackendCompatibleToken();
     
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (canRefresh) {
       originalRequest._retry = true;
       
       try {
@@ -68,6 +84,10 @@ export const projectAPI = {
   getProject: (id) => api.get(`/projects/${id}`),
   updateProject: (id, data) => api.put(`/projects/${id}`, data),
   deleteProject: (id) => api.delete(`/projects/${id}`),
+};
+
+export const dashboardAPI = {
+  getSummary: () => api.get('/dashboard/summary'),
 };
 
 export const fileAPI = {

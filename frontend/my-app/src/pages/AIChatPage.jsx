@@ -191,7 +191,7 @@ const AIChatPage = () => {
         <div className="p-4 border-b border-gray-800">
           <button
             onClick={createNewChat}
-            className="w-full flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl transition-all"
+            className="w-full btn btn-primary"
           >
             <PlusIcon className="w-5 h-5" />
             <span>New Chat</span>
@@ -225,7 +225,7 @@ const AIChatPage = () => {
                   e.stopPropagation();
                   handleDeleteClick(session.id, session.title);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400 transition-all"
+                className="opacity-0 group-hover:opacity-100 btn btn-destructive btn-icon"
               >
                 <TrashIcon className="w-4 h-4" />
               </button>
@@ -251,8 +251,8 @@ const AIChatPage = () => {
             <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-4xl px-4 py-3 rounded-2xl ${
                 message.type === 'user' 
-                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' 
-                  : 'bg-gray-800 text-gray-100'
+                  ? 'bg-indigo-500/20 border border-indigo-400/30 text-white' 
+                  : 'bg-gray-800 text-gray-100 border border-white/10'
               }`}>
                 {message.codeContext && (
                   <div className="mb-3 p-3 bg-black/30 rounded-lg border border-gray-600">
@@ -321,10 +321,10 @@ const AIChatPage = () => {
             <div className="flex-1 flex space-x-2">
               <button
                 onClick={() => setShowCodeInput(!showCodeInput)}
-                className={`px-3 py-3 rounded-xl transition-all ${
+                className={`btn ${showCodeInput || codeContext ? 'btn-primary' : 'btn-secondary'} ${
                   showCodeInput || codeContext
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    ? ''
+                    : ''
                 }`}
                 title="Add code context"
               >
@@ -343,7 +343,7 @@ const AIChatPage = () => {
             <button
               onClick={handleSend}
               disabled={isLoading || !input.trim()}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3 rounded-xl transition-all"
+              className="btn btn-primary px-4"
             >
               <PaperAirplaneIcon className="w-5 h-5" />
             </button>

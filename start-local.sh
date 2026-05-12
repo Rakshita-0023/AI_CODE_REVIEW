@@ -16,7 +16,7 @@ if ! grep -q "GEMINI_API_KEY=" backend/.env; then
 fi
 
 echo "🔧 Starting backend server..."
-cd backend && npm run dev &
+cd backend && PORT=5001 npm run dev &
 BACKEND_PID=$!
 
 echo "⏳ Waiting for backend to start..."

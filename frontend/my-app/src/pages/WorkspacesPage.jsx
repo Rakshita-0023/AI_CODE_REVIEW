@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   PlusIcon, 
@@ -19,10 +19,12 @@ import CreateProjectModal from '../components/modals/CreateProjectModal';
 import DeleteConfirmModal from '../components/ui/DeleteConfirmModal';
 import Pagination from '../components/ui/Pagination';
 import { moveToTrash } from '../utils/trashUtils';
+import { flushWorkspaceSession, recordWorkspaceInteraction, recordWorkspaceOpen } from '../utils/activityTracker';
 
 const WorkspacesPage = () => {
   const { user, isAuthenticated } = useStore();
   const navigate = useNavigate();
+  const activitySessionRef = useRef(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -31,6 +33,42 @@ const WorkspacesPage = () => {
       return;
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    activitySessionRef.current = recordWorkspaceOpen({ projectId: 'workspace-route' });
+
+    const flushCurrentSession = () => {
+      activitySessionRef.current = flushWorkspaceSession(activitySessionRef.current);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushCurrentSession();
+        return;
+      }
+
+      activitySessionRef.current = recordWorkspaceOpen({ projectId: 'workspace-route' });
+    };
+
+    const handleInteraction = () => {
+      activitySessionRef.current = recordWorkspaceInteraction(activitySessionRef.current);
+    };
+
+    window.addEventListener('beforeunload', flushCurrentSession);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pointerdown', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+
+    return () => {
+      window.removeEventListener('beforeunload', flushCurrentSession);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pointerdown', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+      flushCurrentSession();
+    };
+  }, [isAuthenticated]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,7 +174,7 @@ const WorkspacesPage = () => {
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-4 py-2 rounded-xl font-medium transition-all hover:scale-105 flex items-center space-x-2"
+              className="btn btn-primary"
             >
               <PlusIcon className="w-5 h-5" />
               <span>New Sandbox</span>
@@ -227,9 +265,9 @@ const WorkspacesPage = () => {
                       e.stopPropagation();
                       handleDeleteClick(project.id, project.title);
                     }}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-600 text-gray-400 hover:text-white rounded-lg transition-all"
+                    className="opacity-0 group-hover:opacity-100 btn btn-destructive btn-icon"
                   >
-                    <TrashIcon className="w-5 h-5" />
+                    <TrashIcon className="w-4 h-4" />
                   </button>
                 </div>
 

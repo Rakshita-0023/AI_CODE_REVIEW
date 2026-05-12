@@ -10,7 +10,7 @@ import {
   PlusIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
-import { projectAPI, historyAPI, notesAPI } from '../services/api';
+import { dashboardAPI, isBackendCompatibleToken } from '../services/api';
 import useStore from '../store/useStore';
 
 
@@ -25,45 +25,41 @@ const NewDashboardPage = () => {
     weeklyActivity: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isLocalOnlySession, setIsLocalOnlySession] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
+    if (!isBackendCompatibleToken()) {
+      setIsLocalOnlySession(true);
+      setRecentProjects([]);
+      setRecentNotes([]);
+      setStats({
+        totalProjects: 0,
+        totalAnalyses: 0,
+        totalProblems: 0,
+        weeklyActivity: 0
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const [projectsResponse, historyResponse, statsResponse, notesResponse] = await Promise.all([
-        projectAPI.getProjects({ limit: 3, sortBy: 'lastOpened' }),
-        historyAPI.getHistory({ limit: 100 }),
-        projectAPI.getStats(),
-        notesAPI.getNotes({ limit: 3 })
-      ]);
-      
-      const projects = projectsResponse.data.projects || [];
-      const history = historyResponse.data.history || [];
-      const projectStats = statsResponse.data;
-      const notes = notesResponse.data.notes || [];
-      
-      setRecentProjects(projects);
-      setRecentNotes(notes);
-      
-      // Calculate real stats
-      const totalProjects = projects.length;
-      const totalAnalyses = history.length;
-      const problemProjects = projects.filter(p => p.type === 'problem').length;
-      
-      // Calculate weekly activity (analyses in last 7 days)
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const weeklyActivity = history.filter(analysis => 
-        new Date(analysis.createdAt) > weekAgo
-      ).length;
-      
-      setStats({
-        totalProjects,
-        totalAnalyses,
-        totalProblems: problemProjects,
-        weeklyActivity
+      setIsLocalOnlySession(false);
+
+      const response = await dashboardAPI.getSummary();
+      const summary = response.data || {};
+
+      setRecentProjects(summary.recentProjects || []);
+      setRecentNotes(summary.recentNotes || []);
+      setStats(summary.stats || {
+        totalProjects: 0,
+        totalAnalyses: 0,
+        totalProblems: 0,
+        weeklyActivity: 0
       });
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -86,21 +82,18 @@ const NewDashboardPage = () => {
       title: 'New Sandbox',
       description: 'Start coding immediately',
       icon: <BeakerIcon className="w-6 h-6" />,
-      color: 'from-purple-600 to-blue-600',
       action: () => createQuickProject('sandbox')
     },
     {
       title: 'AI Chat',
       description: 'Get coding help',
       icon: <ChatBubbleLeftRightIcon className="w-6 h-6" />,
-      color: 'from-green-600 to-teal-600',
       link: '/ai-chat'
     },
     {
       title: 'View Analytics',
       description: 'Track your progress',
       icon: <ChartBarIcon className="w-6 h-6" />,
-      color: 'from-pink-600 to-purple-600',
       link: '/analytics'
     }
   ];
@@ -131,6 +124,11 @@ const NewDashboardPage = () => {
             <p className="text-gray-400">
               Ready to build something amazing today?
             </p>
+            {isLocalOnlySession && (
+              <p className="text-sm text-amber-400 mt-3">
+                This session is using demo/local sign-in, so backend dashboard data is skipped to avoid slow loading loops.
+              </p>
+            )}
           </div>
 
           {/* Stats Cards */}
@@ -191,27 +189,27 @@ const NewDashboardPage = () => {
                   <Link
                     key={index}
                     to={action.link}
-                    className={`bg-gradient-to-r ${action.color} p-6 rounded-2xl hover:scale-105 transition-all group block`}
+                    className="card p-6 rounded-2xl hover:border-white/20 transition-all group block"
                   >
                     <div className="flex items-center justify-between mb-3">
-                      {action.icon}
-                      <ArrowRightIcon className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="text-slate-300">{action.icon}</div>
+                      <ArrowRightIcon className="w-5 h-5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <h3 className="font-semibold mb-1">{action.title}</h3>
-                    <p className="text-sm opacity-90">{action.description}</p>
+                    <p className="text-sm text-slate-400">{action.description}</p>
                   </Link>
                 ) : (
                   <button
                     key={index}
                     onClick={action.action}
-                    className={`bg-gradient-to-r ${action.color} p-6 rounded-2xl hover:scale-105 transition-all group text-left w-full`}
+                    className="card p-6 rounded-2xl hover:border-white/20 transition-all group text-left w-full"
                   >
                     <div className="flex items-center justify-between mb-3">
-                      {action.icon}
-                      <ArrowRightIcon className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="text-slate-300">{action.icon}</div>
+                      <ArrowRightIcon className="w-5 h-5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <h3 className="font-semibold mb-1">{action.title}</h3>
-                    <p className="text-sm opacity-90">{action.description}</p>
+                    <p className="text-sm text-slate-400">{action.description}</p>
                   </button>
                 )
               ))}
@@ -282,7 +280,7 @@ const NewDashboardPage = () => {
                 <p className="text-gray-400 mb-6">Create your first project to get started</p>
                 <Link
                   to="/workspaces"
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-6 py-3 rounded-xl font-medium transition-all hover:scale-105 flex items-center space-x-2 mx-auto"
+                  className="btn btn-primary px-6 py-3 mx-auto"
                 >
                   <PlusIcon className="w-5 h-5" />
                   <span>Create Project</span>
@@ -346,7 +344,7 @@ const NewDashboardPage = () => {
                 <p className="text-gray-400 mb-6">Create your first note to get started</p>
                 <Link
                   to="/notes"
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-6 py-3 rounded-xl font-medium transition-all hover:scale-105 flex items-center space-x-2 mx-auto"
+                  className="btn btn-primary px-6 py-3 mx-auto"
                 >
                   <PlusIcon className="w-5 h-5" />
                   <span>Create Note</span>

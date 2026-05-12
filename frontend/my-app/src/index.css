@@ -65,14 +65,6 @@
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-white px-4 py-2 rounded-lg font-medium transition-colors;
-  }
-
-  .btn-secondary {
-    @apply bg-[var(--bg-tertiary)] hover:bg-[var(--border-primary)] text-[var(--text-primary)] px-4 py-2 rounded-lg font-medium transition-colors border border-[var(--border-primary)];
-  }
-
   .card {
     @apply bg-[var(--bg-primary)] rounded-lg shadow-sm border border-[var(--border-primary)];
   }
@@ -180,4 +172,71 @@ code {
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background-color: #374151;
+}
+
+/* Force dark theme for all code blocks */
+pre[class*="language-"] {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+code[class*="language-"] {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+/* Syntax highlighter dark theme override */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #64748b !important;
+}
+
+.token.punctuation {
+  color: #94a3b8 !important;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #f87171 !important;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #34d399 !important;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #60a5fa !important;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #a78bfa !important;
+}
+
+.token.function,
+.token.class-name {
+  color: #fbbf24 !important;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #fb7185 !important;
 }

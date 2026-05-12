@@ -9,7 +9,7 @@ const ProjectCodeEditor = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-900/30">
+    <div className="h-full flex flex-col bg-[#0b0d10] border-r border-white/10">
       <div className="flex-1">
         <Editor
           height="100%"
@@ -33,10 +33,11 @@ const ProjectCodeEditor = () => {
         />
       </div>
 
-      <div className="px-4 py-2 border-t border-gray-800/50 bg-gray-900/20">
-        <div className="flex items-center space-x-4 text-xs text-gray-400">
+      <div className="px-4 py-2 border-t border-white/10 bg-[#0f1318]">
+        <div className="flex items-center space-x-4 text-xs text-slate-400">
           <span>Lines: {code.split('\n').length}</span>
           <span>Characters: {code.length}</span>
+          <span className="capitalize">{currentProject?.language || language}</span>
         </div>
       </div>
     </div>

@@ -106,23 +106,23 @@ const EditorNavbar = ({ onToggleAIChat, onToggleScratchpad, activePanel }) => {
   ];
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-xl border-b border-gray-800 px-6 py-3">
+    <div className="bg-[#0b0d10] border-b border-white/10 px-4 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => navigate('/workspaces')}
-            className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800/50"
+            className="btn btn-ghost btn-icon"
             title="Back to Workspaces"
           >
-            <ArrowLeftIcon className="w-5 h-5" />
+            <ArrowLeftIcon className="w-4 h-4" />
           </button>
           <h1 className="text-lg font-semibold text-white">{currentProject?.title || 'Untitled Project'}</h1>
-          <span className="px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded-full">
+          <span className="px-2 py-1 text-xs font-medium bg-white/[0.04] border border-white/12 text-slate-300 rounded-full">
             {currentProject?.language || 'javascript'}
           </span>
         </div>
         
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1 overflow-x-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -130,7 +130,7 @@ const EditorNavbar = ({ onToggleAIChat, onToggleScratchpad, activePanel }) => {
                 key={item.id}
                 onClick={item.onClick}
                 disabled={isAnalyzing}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-secondary btn-toolbar whitespace-nowrap"
               >
                 <Icon className="w-4 h-4" />
                 <span className="text-sm font-medium">{item.label}</span>
@@ -147,10 +147,10 @@ const EditorNavbar = ({ onToggleAIChat, onToggleScratchpad, activePanel }) => {
           
           <button
             onClick={onToggleScratchpad}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
+            className={`btn btn-toolbar whitespace-nowrap ${
               activePanel === 'scratchpad' 
-                ? 'bg-gray-700 hover:bg-gray-800 border border-gray-500' 
-                : 'bg-gray-600 hover:bg-gray-700'
+                ? 'btn-primary' 
+                : 'btn-secondary'
             }`}
             title="Notes"
           >
@@ -161,10 +161,10 @@ const EditorNavbar = ({ onToggleAIChat, onToggleScratchpad, activePanel }) => {
           
           <button
             onClick={onToggleAIChat}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+            className={`btn btn-toolbar whitespace-nowrap ${
               activePanel === 'ai-chat'
-                ? 'bg-gradient-to-r from-purple-700 to-blue-700 shadow-lg shadow-purple-500/50'
-                : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-purple-500/25'
+                ? 'btn-primary'
+                : 'btn-secondary'
             }`}
             title="AI Chat Assistant"
           >
@@ -175,7 +175,7 @@ const EditorNavbar = ({ onToggleAIChat, onToggleScratchpad, activePanel }) => {
           
           <button
             onClick={handleRunCode}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 transition-colors duration-200"
+            className="btn btn-primary btn-toolbar whitespace-nowrap"
             title="Run Code (Ctrl+Enter)"
           >
             <PlayIcon className="w-4 h-4" />

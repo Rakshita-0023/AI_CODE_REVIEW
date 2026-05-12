@@ -34,7 +34,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md mx-4">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-white">Create New Sandbox</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="btn btn-ghost btn-icon">
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
@@ -81,14 +81,14 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
           <div className="flex space-x-3 pt-4">
             <button
               type="submit"
-              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 py-3 rounded-xl font-medium text-white transition-all"
+              className="flex-1 btn btn-primary"
             >
               Create & Open Editor
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-800 hover:bg-gray-700 py-3 rounded-xl font-medium text-white transition-all"
+              className="flex-1 btn btn-secondary"
             >
               Cancel
             </button>

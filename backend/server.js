@@ -8,6 +8,7 @@ import { promisify } from 'util';
 import os from 'os';
 import dotenv from 'dotenv';
 import pkg from 'pg';
+import jwt from 'jsonwebtoken';
 const { Pool } = pkg;
 
 // ES module compatibility
@@ -87,7 +88,13 @@ const authenticateUser = (req, res, next) => {
     } else if (token.startsWith('google-token-')) {
       userId = parseInt(token.split('-')[2]);
     } else {
-      return res.status(401).json({ error: 'Invalid token format' });
+      // Backward compatibility: accept JWT-style tokens from older auth flow
+      try {
+        const decoded = jwt.decode(token);
+        userId = decoded?.id || decoded?.userId || decoded?.sub;
+      } catch (jwtError) {
+        return res.status(401).json({ error: 'Invalid token format' });
+      }
     }
     
     // Check if userId is valid
@@ -101,6 +108,35 @@ const authenticateUser = (req, res, next) => {
     console.error('Auth middleware error:', error);
     return res.status(401).json({ error: 'Invalid token' });
   }
+};
+
+const extractJsonObject = (text) => {
+  if (!text || typeof text !== 'string') return null;
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch (_) {
+    // try markdown fenced json
+    const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (fenced?.[1]) {
+      try {
+        return JSON.parse(fenced[1]);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+};
+
+const callGemini = async (prompt) => {
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  if (!geminiApiKey) return null;
+  const { GoogleGenerativeAI } = await import('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(geminiApiKey);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const result = await model.generateContent(prompt);
+  return result.response.text();
 };
 
 // Simple code analyzer
@@ -125,6 +161,15 @@ class CodeAnalyzer {
             suggestion: 'Add semicolon at end of statement'
           });
         }
+        if (trimmed.includes('==') && !trimmed.includes('===') && !trimmed.includes('!=') && !trimmed.includes('<=') && !trimmed.includes('>=')) {
+          issues.push({
+            line: lineNum,
+            severity: 'low',
+            category: 'best-practice',
+            message: 'Use strict equality for safer comparisons',
+            suggestion: 'Prefer === instead of =='
+          });
+        }
       }
       
       if (language === 'python') {
@@ -135,6 +180,24 @@ class CodeAnalyzer {
             category: 'syntax',
             message: 'Invalid print syntax',
             suggestion: 'Use print() function'
+          });
+        }
+        if (/^(if|for|while|def|class)\b/.test(trimmed) && !trimmed.endsWith(':')) {
+          issues.push({
+            line: lineNum,
+            severity: 'high',
+            category: 'syntax',
+            message: 'Missing colon at end of block statement',
+            suggestion: 'Add ":" at the end of this line'
+          });
+        }
+        if (trimmed.includes('\\append(')) {
+          issues.push({
+            line: lineNum,
+            severity: 'high',
+            category: 'syntax',
+            message: 'Invalid escape character in method call',
+            suggestion: 'Use .append(...) instead of \\append(...)'
           });
         }
       }
@@ -243,6 +306,33 @@ const initDatabase = async () => {
 // Initialize database on startup
 initDatabase();
 
+// Keep the pooled database connection warm so the first dashboard request
+// does not pay the full remote database wake-up cost after idle periods.
+const keepDatabaseWarm = () => {
+  const intervalMs = Number.parseInt(process.env.DB_KEEPALIVE_INTERVAL_MS || '240000', 10);
+  const timer = setInterval(async () => {
+    try {
+      await pool.query('SELECT 1');
+    } catch (error) {
+      console.warn('Database keepalive failed:', error.message);
+    }
+  }, intervalMs);
+
+  timer.unref?.();
+};
+
+keepDatabaseWarm();
+
+// API root status endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    ok: true,
+    service: 'CodeSense AI Backend',
+    message: 'API is running',
+    docsHint: 'Use specific routes like /api/auth/login, /api/projects, /api/notes, /api/scratchpads, /api/ai/review'
+  });
+});
+
 // AI Chat endpoint with Gemini 2.5 Flash integration
 app.post('/api/ai/chat', authenticateUser, aiRateLimit, async (req, res) => {
   const { message, codeContext, workspaceId } = req.body;
@@ -306,47 +396,37 @@ app.post('/api/ai/debug', authenticateUser, aiRateLimit, async (req, res) => {
   const { code, language, workspaceId } = req.body;
   
   try {
-    let response;
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    
-    if (geminiApiKey) {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(geminiApiKey);
-      
-      try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        
-        const prompt = `You are an expert code debugger. Analyze the following ${language || 'code'} and identify bugs, errors, and issues.
+    const startTime = Date.now();
+    let textResponse = '';
+    let parsed = null;
+    try {
+      const prompt = `Analyze and debug this ${language || 'code'}.
+Return ONLY valid JSON with this shape:
+{"bugs":[{"line":number,"issue":string,"fix":string}],"fixedCode":string,"explanation":string,"preventionTip":string}
 
-Code to debug:
+Code:
 \`\`\`${language || ''}
 ${code}
-\`\`\`
-
-Provide:
-1. List of bugs/issues found
-2. Corrected code
-3. Explanation of fixes
-
-Format your response clearly with sections for issues and fixes.`;
-        
-        const result = await model.generateContent(prompt);
-        response = result.response.text();
-      } catch (error) {
-        console.error('Gemini debug error:', error);
-        response = 'AI debugging service is temporarily unavailable. Please check your code manually for syntax errors, missing semicolons, undefined variables, and logic issues.';
-      }
-    } else {
-      response = 'AI debugging requires GEMINI_API_KEY configuration. Please check your code for common issues like syntax errors, missing semicolons, and undefined variables.';
+\`\`\``;
+      textResponse = (await callGemini(prompt)) || '';
+      parsed = extractJsonObject(textResponse);
+    } catch (error) {
+      console.error('Gemini debug error:', error);
     }
+
+    const bugs = Array.isArray(parsed?.bugs) ? parsed.bugs : [];
+    const fixedCode = parsed?.fixedCode || code;
+    const explanation = parsed?.explanation || textResponse || 'Could not generate detailed debugging output.';
+    const preventionTip = parsed?.preventionTip || 'Add tests for edge cases and syntax validation in your CI checks.';
+    const processingTime = Date.now() - startTime;
     
     // Save to history
     await pool.query(
       'INSERT INTO history (user_id, workspace_id, type, title, code, language, result) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [req.userId, workspaceId || null, 'debug', 'Code Debug', code, language, JSON.stringify({ response })]
+      [req.userId, workspaceId || null, 'debug', 'Code Debug', code, language, JSON.stringify({ bugs, fixedCode, explanation, preventionTip, processingTime })]
     );
     
-    res.json({ response, language });
+    res.json({ bugs, fixedCode, explanation, preventionTip, language, processingTime });
   } catch (error) {
     console.error('Debug error:', error);
     res.status(500).json({ 
@@ -361,48 +441,40 @@ app.post('/api/ai/approaches', authenticateUser, aiRateLimit, async (req, res) =
   const { code, language, workspaceId } = req.body;
   
   try {
-    let response;
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    
-    if (geminiApiKey) {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(geminiApiKey);
-      
-      try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        
-        const prompt = `You are an expert programmer. Analyze the following ${language || 'code'} and suggest alternative approaches, algorithms, or design patterns.
+    const startTime = Date.now();
+    let textResponse = '';
+    let parsed = null;
+    try {
+      const prompt = `Suggest alternative approaches for this ${language || 'code'}.
+Return ONLY valid JSON:
+{"alternatives":[{"approach":string,"code":string,"pros":[string],"cons":[string],"recommended":boolean}]}
 
-Code to analyze:
+Code:
 \`\`\`${language || ''}
 ${code}
-\`\`\`
-
-Provide:
-1. Alternative algorithms or approaches
-2. Different design patterns that could be used
-3. More efficient or cleaner implementations
-4. Code examples for each approach
-
-Focus on practical alternatives that improve the code.`;
-        
-        const result = await model.generateContent(prompt);
-        response = result.response.text();
-      } catch (error) {
-        console.error('Gemini approaches error:', error);
-        response = 'AI approaches service is temporarily unavailable. Consider reviewing your code for alternative algorithms, design patterns, or more efficient implementations.';
-      }
-    } else {
-      response = 'AI approaches analysis requires GEMINI_API_KEY configuration. Consider exploring different algorithms, design patterns, or refactoring approaches for your code.';
+\`\`\``;
+      textResponse = (await callGemini(prompt)) || '';
+      parsed = extractJsonObject(textResponse);
+    } catch (error) {
+      console.error('Gemini approaches error:', error);
     }
+
+    const alternatives = Array.isArray(parsed?.alternatives) ? parsed.alternatives : [{
+      approach: 'Current approach with cleanup',
+      code,
+      pros: ['No behavioral changes', 'Low risk to adopt'],
+      cons: ['Limited optimization depth'],
+      recommended: true
+    }];
+    const processingTime = Date.now() - startTime;
     
     // Save to history
     await pool.query(
       'INSERT INTO history (user_id, workspace_id, type, title, code, language, result) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [req.userId, workspaceId || null, 'approaches', 'Alternative Approaches', code, language, JSON.stringify({ response })]
+      [req.userId, workspaceId || null, 'approaches', 'Alternative Approaches', code, language, JSON.stringify({ alternatives, processingTime })]
     );
     
-    res.json({ response, language });
+    res.json({ alternatives, language, processingTime });
   } catch (error) {
     console.error('Approaches error:', error);
     res.status(500).json({ 
@@ -434,48 +506,40 @@ app.post('/api/ai/optimize', authenticateUser, aiRateLimit, async (req, res) => 
   const { code, language, workspaceId } = req.body;
   
   try {
-    let response;
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    
-    if (geminiApiKey) {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(geminiApiKey);
-      
-      try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-        
-        const prompt = `You are an expert code optimizer. Analyze the following ${language || 'code'} and suggest optimizations for performance, readability, and best practices.
+    const startTime = Date.now();
+    let textResponse = '';
+    let parsed = null;
+    try {
+      const prompt = `Optimize this ${language || 'code'} for performance and clarity.
+Return ONLY valid JSON:
+{"optimizations":[{"type":string,"description":string,"optimizedCode":string,"improvement":string,"tradeoff":string}]}
 
-Code to optimize:
+Code:
 \`\`\`${language || ''}
 ${code}
-\`\`\`
-
-Provide:
-1. Performance improvements
-2. Code quality enhancements
-3. Best practices recommendations
-4. Optimized version of the code
-
-Focus on practical, actionable improvements.`;
-        
-        const result = await model.generateContent(prompt);
-        response = result.response.text();
-      } catch (error) {
-        console.error('Gemini optimize error:', error);
-        response = 'AI optimization service is temporarily unavailable. Consider reviewing your code for performance bottlenecks, redundant operations, and opportunities to use more efficient algorithms.';
-      }
-    } else {
-      response = 'AI optimization requires GEMINI_API_KEY configuration. Consider reviewing your code for performance improvements and best practices.';
+\`\`\``;
+      textResponse = (await callGemini(prompt)) || '';
+      parsed = extractJsonObject(textResponse);
+    } catch (error) {
+      console.error('Gemini optimize error:', error);
     }
+
+    const optimizations = Array.isArray(parsed?.optimizations) ? parsed.optimizations : [{
+      type: 'General',
+      description: textResponse || 'No optimization details returned.',
+      optimizedCode: code,
+      improvement: 'No measured change',
+      tradeoff: 'No tradeoff data'
+    }];
+    const processingTime = Date.now() - startTime;
     
     // Save to history
     await pool.query(
       'INSERT INTO history (user_id, workspace_id, type, title, code, language, result) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [req.userId, workspaceId || null, 'optimize', 'Code Optimization', code, language, JSON.stringify({ response })]
+      [req.userId, workspaceId || null, 'optimize', 'Code Optimization', code, language, JSON.stringify({ optimizations, processingTime })]
     );
     
-    res.json({ response, language });
+    res.json({ optimizations, language, processingTime });
   } catch (error) {
     console.error('Optimize error:', error);
     res.status(500).json({ 
@@ -489,6 +553,7 @@ Focus on practical, actionable improvements.`;
 app.post('/api/ai/review', authenticateUser, async (req, res) => {
   try {
     const { code, language, workspaceId } = req.body;
+    const startTime = Date.now();
     const issues = CodeAnalyzer.analyzeCode(code, language);
 
     if (issues.length === 0) {
@@ -505,12 +570,29 @@ app.post('/api/ai/review', authenticateUser, async (req, res) => {
     const warningCount = issues.filter(i => i.severity === 'medium').length;
     const qualityScore = Math.max(30, 100 - (errorCount * 20) - (warningCount * 10));
 
+    let aiSummary = '';
+    try {
+      const prompt = `Review this ${language || 'code'} and return ONLY valid JSON:
+{"summary":string,"issues":[{"line":number,"severity":"low|medium|high","message":string,"suggestion":string}]}
+\nCode:\n\`\`\`${language || ''}\n${code}\n\`\`\``;
+      const text = await callGemini(prompt);
+      const parsed = extractJsonObject(text);
+      if (parsed?.summary) aiSummary = parsed.summary;
+      if (Array.isArray(parsed?.issues) && parsed.issues.length > 0) {
+        issues.push(...parsed.issues);
+      }
+    } catch (error) {
+      console.error('Gemini review error:', error);
+    }
+
+    const processingTime = Date.now() - startTime;
     const result = {
       reviewId: 'review-' + Date.now(),
       language: language || 'javascript',
       qualityScore,
       issues,
-      summary: issues.length === 1 && issues[0].severity === 'info' ? 'Code quality is excellent' : `Found ${errorCount} error(s), ${warningCount} warning(s)`
+      summary: aiSummary || (issues.length === 1 && issues[0].severity === 'info' ? 'Code quality is excellent' : `Found ${errorCount} error(s), ${warningCount} warning(s)`),
+      processingTime
     };
 
     // Save to history
@@ -1065,6 +1147,16 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.post('/api/auth/refresh', authenticateUser, async (req, res) => {
+  try {
+    const token = 'token-' + req.userId + '-' + Date.now();
+    res.json({ accessToken: token, token });
+  } catch (error) {
+    console.error('Refresh error:', error);
+    res.status(500).json({ error: 'Token refresh failed' });
+  }
+});
+
 app.post('/api/auth/logout', (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
@@ -1163,6 +1255,77 @@ app.get('/api/projects/stats', authenticateUser, async (req, res) => {
   } catch (error) {
     console.error('Stats error:', error);
     res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+app.get('/api/dashboard/summary', authenticateUser, async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const [statsResult, projectsResult, notesResult] = await Promise.all([
+      client.query(
+        `SELECT
+          (SELECT COUNT(*)::int FROM workspaces WHERE user_id = $1) AS total_projects,
+          (SELECT COUNT(*)::int FROM history WHERE user_id = $1) AS total_analyses,
+          (SELECT COUNT(*)::int FROM workspaces WHERE user_id = $1 AND type = 'problem') AS total_problems,
+          (SELECT COUNT(*)::int FROM history WHERE user_id = $1 AND created_at > NOW() - INTERVAL '7 days') AS weekly_activity`,
+        [req.userId]
+      ),
+      client.query(
+        `SELECT id, user_id, title, description, type, language, tags, content, created_at, last_opened_at
+         FROM workspaces
+         WHERE user_id = $1
+         ORDER BY last_opened_at DESC
+         LIMIT 3`,
+        [req.userId]
+      ),
+      client.query(
+        `SELECT id, user_id, title, content, folder, tags, created_at, updated_at
+         FROM notes
+         WHERE user_id = $1
+         ORDER BY updated_at DESC
+         LIMIT 3`,
+        [req.userId]
+      )
+    ]);
+
+    const statsRow = statsResult.rows[0] || {};
+
+    res.json({
+      stats: {
+        totalProjects: statsRow.total_projects || 0,
+        totalAnalyses: statsRow.total_analyses || 0,
+        totalProblems: statsRow.total_problems || 0,
+        weeklyActivity: statsRow.weekly_activity || 0
+      },
+      recentProjects: projectsResult.rows.map((row) => ({
+        id: row.id,
+        userId: row.user_id,
+        title: row.title,
+        description: row.description,
+        type: row.type,
+        language: row.language,
+        tags: row.tags,
+        content: row.content,
+        createdAt: row.created_at,
+        lastOpenedAt: row.last_opened_at
+      })),
+      recentNotes: notesResult.rows.map((row) => ({
+        id: row.id,
+        userId: row.user_id,
+        title: row.title,
+        content: row.content,
+        folder: row.folder,
+        tags: row.tags,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }))
+    });
+  } catch (error) {
+    console.error('Dashboard summary error:', error);
+    res.status(500).json({ error: 'Failed to fetch dashboard summary' });
+  } finally {
+    client.release();
   }
 });
 

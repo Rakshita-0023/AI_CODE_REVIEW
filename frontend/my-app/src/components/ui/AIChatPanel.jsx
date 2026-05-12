@@ -66,11 +66,12 @@ const AIChatPanel = ({ onClose }) => {
     } catch (error) {
       console.error('Chat error:', error);
       toast.error('Failed to send message');
+      const apiError = error?.response?.data?.error;
       
       const errorMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: apiError ? `Request failed: ${apiError}` : 'Sorry, I encountered an error. Please try again.',
         timestamp: new Date().toISOString()
       };
       
@@ -81,16 +82,16 @@ const AIChatPanel = ({ onClose }) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-black text-white">
+    <div className="h-full flex flex-col bg-[#080a0d] text-slate-100">
       {/* Header */}
-      <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+      <div className="p-4 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <SparklesIcon className="w-5 h-5 text-purple-400" />
+          <SparklesIcon className="w-5 h-5 text-indigo-300" />
           <h3 className="text-lg font-semibold">AI Assistant</h3>
         </div>
         <button
           onClick={onClose}
-          className="p-1 text-gray-400 hover:text-white transition-colors"
+          className="p-1 text-slate-400 hover:text-white transition-colors"
         >
           <XMarkIcon className="w-5 h-5" />
         </button>
@@ -106,12 +107,12 @@ const AIChatPanel = ({ onClose }) => {
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
                 message.type === 'user'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-800 text-gray-100'
+                  ? 'bg-[rgba(99,102,241,0.25)] border border-indigo-400/30 text-white'
+                  : 'bg-white/[0.03] border border-white/10 text-slate-100'
               }`}
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              <p className="text-xs opacity-70 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 {new Date(message.timestamp).toLocaleTimeString()}
               </p>
             </div>
@@ -120,11 +121,11 @@ const AIChatPanel = ({ onClose }) => {
         
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-800 rounded-lg p-3">
+            <div className="bg-white/[0.03] border border-white/10 rounded-lg p-3">
               <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
           </div>
@@ -134,20 +135,20 @@ const AIChatPanel = ({ onClose }) => {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-white/10 bg-[#0b0d10]">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Ask me about your code..."
-            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+            className="flex-1 bg-[#12161d] border border-white/10 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400/60"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={!inputMessage.trim() || isLoading}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors"
+            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg transition-colors"
           >
             <PaperAirplaneIcon className="w-4 h-4" />
           </button>

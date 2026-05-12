@@ -38,7 +38,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="p-2 rounded-lg hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="btn btn-ghost btn-icon"
           >
             <ChevronLeftIcon className="w-5 h-5" />
           </button>
@@ -50,10 +50,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               disabled={page === '...'}
               className={`min-w-[40px] h-10 rounded-lg text-sm font-medium transition-colors ${
                 page === currentPage
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-indigo-500/80 text-white border border-indigo-300/40'
                   : page === '...'
                   ? 'text-gray-500 cursor-default'
-                  : 'hover:bg-gray-800 text-gray-300'
+                  : 'hover:bg-gray-800 text-gray-300 border border-transparent'
               }`}
             >
               {page}
@@ -63,7 +63,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage >= totalPages || totalPages <= 1}
-            className="p-2 rounded-lg hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="btn btn-ghost btn-icon"
           >
             <ChevronRightIcon className="w-5 h-5" />
           </button>

@@ -1,26 +1,19 @@
-import { useState, useEffect } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
-  ClipboardDocumentIcon,
-  ArrowDownTrayIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XCircleIcon,
-  DocumentMagnifyingGlassIcon,
-  ClockIcon,
-  DocumentTextIcon
+  DocumentMagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import useStore from '../../store/useStore';
-import toast from 'react-hot-toast';
 import LottieAnimation from './LottieAnimation';
-import styles from './ResultsPanel.module.css';
 
 const ResultsPanel = () => {
-  const { currentAnalysis, theme, isAnalyzing } = useStore();
+  const { currentAnalysis, isAnalyzing } = useStore();
 
   const renderHeader = () => (
-    <div className="p-4 border-b border-gray-800">
+    <div className="p-4 border-b border-white/10 bg-[#0b0d10]">
       <h3 className="text-lg font-semibold text-white">
         Analysis Results
       </h3>
@@ -44,14 +37,14 @@ const ResultsPanel = () => {
     return (
       <div className="h-full flex flex-col">
         {renderHeader()}
-        <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 transition-opacity duration-500 ease-in-out p-6">
+        <div className="flex-1 flex items-center justify-center text-slate-400 transition-opacity duration-500 ease-in-out p-6">
           <div className="text-center max-w-md">
             <DocumentMagnifyingGlassIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <h3 className="text-xl font-semibold mb-2">Ready to Analyze</h3>
             <p className="text-sm mb-6">
               Enter your code in the editor and use the toolbar above to:
             </p>
-            <ul className="text-left text-sm space-y-2 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+            <ul className="text-left text-sm space-y-2 bg-white/[0.03] border border-white/10 p-4 rounded-lg">
               <li className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                 Review code quality and best practices
@@ -91,55 +84,55 @@ const ResultsPanel = () => {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-[#080a0d] text-slate-100">
       {renderHeader()}
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
         <div className="p-6 space-y-6 max-w-full break-words">
           <div className="space-y-6">
             {currentAnalysis.qualityScore && (
-              <div className="card p-4">
+              <div className="card p-4 border-white/10">
                 <h4 className="font-semibold mb-2">Code Quality Score</h4>
                 <div className="flex items-center space-x-4">
-                  <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div className="flex-1 bg-slate-800 rounded-full h-3">
                     <div
-                      className="bg-primary-600 h-3 rounded-full transition-all duration-500"
+                      className="bg-indigo-400 h-3 rounded-full transition-all duration-500"
                       style={{ width: `${currentAnalysis.qualityScore}%` }}
                     />
                   </div>
-                  <span className="text-2xl font-bold text-primary-600">
+                  <span className="text-2xl font-bold text-indigo-300">
                     {currentAnalysis.qualityScore}/100
                   </span>
                 </div>
               </div>
             )}
 
-            <div className="card p-4">
+            <div className="card p-4 border-white/10">
               <h4 className="font-semibold mb-2">Summary</h4>
-              <div className="max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded p-3 bg-gray-50 dark:bg-gray-800 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                <p className="text-gray-700 dark:text-gray-300 break-words whitespace-pre-wrap text-sm leading-relaxed">
+              <div className="max-h-40 overflow-y-auto border border-white/10 rounded p-3 bg-white/[0.02] scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <p className="text-slate-300 break-words whitespace-pre-wrap text-sm leading-relaxed">
                   {currentAnalysis.summary || currentAnalysis.explanation || `${currentAnalysis.type.charAt(0).toUpperCase() + currentAnalysis.type.slice(1)} analysis completed successfully.`}
                 </p>
               </div>
             </div>
 
-            <div className="card p-4">
+            <div className="card p-4 border-white/10">
               <h4 className="font-semibold mb-2">Analysis Details</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div className="break-words">
-                  <span className="text-gray-500">Language:</span>
+                  <span className="text-slate-500">Language:</span>
                   <span className="ml-2 font-medium">{currentAnalysis.language}</span>
                 </div>
                 <div className="break-words">
-                  <span className="text-gray-500">Processing Time:</span>
-                  <span className="ml-2 font-medium">{currentAnalysis.processingTime || 'N/A'}ms</span>
+                  <span className="text-slate-500">Processing Time:</span>
+                  <span className="ml-2 font-medium">{Number.isFinite(currentAnalysis.processingTime) ? `${currentAnalysis.processingTime}ms` : 'Unavailable'}</span>
                 </div>
                 <div className="break-words">
-                  <span className="text-gray-500">Analysis Type:</span>
+                  <span className="text-slate-500">Analysis Type:</span>
                   <span className="ml-2 font-medium capitalize">{currentAnalysis.type}</span>
                 </div>
                 <div className="break-words">
-                  <span className="text-gray-500">Timestamp:</span>
+                  <span className="text-slate-500">Timestamp:</span>
                   <span className="ml-2 font-medium">
                     {new Date(currentAnalysis.timestamp).toLocaleString()}
                   </span>
@@ -152,7 +145,7 @@ const ResultsPanel = () => {
             <div className="space-y-4">
               <h4 className="font-semibold text-lg">Issues Found</h4>
               {currentAnalysis.issues.map((issue, index) => (
-                <div key={index} className="card p-4">
+                <div key={index} className="card p-4 border-white/10">
                   <div className="flex items-start space-x-3">
                     {getSeverityIcon(issue.severity)}
                     <div className="flex-1">
@@ -166,9 +159,9 @@ const ResultsPanel = () => {
                           {issue.severity}
                         </span>
                       </div>
-                      <p className="text-gray-700 dark:text-gray-300 mb-2 break-words">{issue.message}</p>
+                      <p className="text-slate-300 mb-2 break-words">{issue.message}</p>
                       {issue.suggestion && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded break-words">
+                        <p className="text-sm text-slate-400 bg-white/[0.02] p-2 rounded break-words">
                           <strong>Suggestion:</strong> {issue.suggestion}
                         </p>
                       )}
@@ -181,26 +174,28 @@ const ResultsPanel = () => {
 
           {currentAnalysis?.fixedCode && (
             <div className="space-y-4">
-              <div className="card p-4">
+              <div className="card p-4 border-white/10">
                 <h4 className="font-semibold text-lg mb-4">Fixed Code</h4>
                 <SyntaxHighlighter
                   language={currentAnalysis.language || 'javascript'}
-                  style={theme === 'dark' ? oneDark : oneLight}
+                  style={oneDark}
                   className="rounded-lg text-sm"
                   wrapLines={true}
                   wrapLongLines={true}
                   customStyle={{
                     maxWidth: '100%',
                     overflow: 'auto',
-                    wordBreak: 'break-word'
+                    wordBreak: 'break-word',
+                    backgroundColor: '#1e293b',
+                    color: '#e2e8f0'
                   }}
                 >
                   {currentAnalysis.fixedCode}
                 </SyntaxHighlighter>
                 {(currentAnalysis.explanation || currentAnalysis.summary) && (
-                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <strong className="text-blue-700 dark:text-blue-300">Explanation:</strong>
-                    <p className="text-blue-600 dark:text-blue-400 text-sm mt-1 break-words">
+                  <div className="mt-4 p-3 bg-indigo-500/10 border border-indigo-400/30 rounded-lg">
+                    <strong className="text-indigo-300">Explanation:</strong>
+                    <p className="text-indigo-200 text-sm mt-1 break-words">
                       {currentAnalysis.explanation || currentAnalysis.summary}
                     </p>
                   </div>
@@ -213,21 +208,23 @@ const ResultsPanel = () => {
             <div className="space-y-4">
               <h4 className="font-semibold text-lg">Alternative Approaches</h4>
               {currentAnalysis.alternatives.map((alt, index) => (
-                <div key={index} className="card p-4">
+                <div key={index} className="card p-4 border-white/10">
                   <h4 className="font-semibold mb-2">{alt.approach || 'Alternative Approach'}</h4>
                   {alt.code && (
                     <div className="mb-4">
                       <h5 className="font-medium mb-2">Implementation:</h5>
                       <SyntaxHighlighter
                         language={currentAnalysis.language}
-                        style={theme === 'dark' ? oneDark : oneLight}
+                        style={oneDark}
                         className="rounded-lg text-sm"
                         wrapLines={true}
                         wrapLongLines={true}
                         customStyle={{
                           maxWidth: '100%',
                           overflow: 'auto',
-                          wordBreak: 'break-word'
+                          wordBreak: 'break-word',
+                          backgroundColor: '#1e293b',
+                          color: '#e2e8f0'
                         }}
                       >
                         {alt.code}
@@ -265,22 +262,24 @@ const ResultsPanel = () => {
             <div className="space-y-4">
               <h4 className="font-semibold text-lg">Performance Optimizations</h4>
               {currentAnalysis.optimizations.map((opt, index) => (
-                <div key={index} className="card p-4">
+                <div key={index} className="card p-4 border-white/10">
                   <h4 className="font-semibold mb-2">{opt.type || 'Performance Optimization'}</h4>
-                  <p className="text-gray-700 dark:text-gray-300 mb-4 break-words">{opt.description || 'Optimization suggestion provided'}</p>
+                  <p className="text-slate-300 mb-4 break-words">{opt.description || 'Optimization suggestion provided'}</p>
                   {opt.optimizedCode && (
                     <div className="mb-4">
                       <h5 className="font-medium mb-2">Optimized Code:</h5>
                       <SyntaxHighlighter
                         language={currentAnalysis.language}
-                        style={theme === 'dark' ? oneDark : oneLight}
+                        style={oneDark}
                         className="rounded-lg text-sm"
                         wrapLines={true}
                         wrapLongLines={true}
                         customStyle={{
                           maxWidth: '100%',
                           overflow: 'auto',
-                          wordBreak: 'break-word'
+                          wordBreak: 'break-word',
+                          backgroundColor: '#1e293b',
+                          color: '#e2e8f0'
                         }}
                       >
                         {opt.optimizedCode}
@@ -288,9 +287,9 @@ const ResultsPanel = () => {
                     </div>
                   )}
                   {opt.improvement && (
-                    <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
-                      <strong className="text-green-700 dark:text-green-300">Improvement:</strong>
-                      <p className="text-green-600 dark:text-green-400 text-sm mt-1 break-words">{opt.improvement}</p>
+                    <div className="bg-emerald-500/10 border border-emerald-400/30 p-3 rounded-lg">
+                      <strong className="text-emerald-300">Improvement:</strong>
+                      <p className="text-emerald-200 text-sm mt-1 break-words">{opt.improvement}</p>
                     </div>
                   )}
                 </div>
