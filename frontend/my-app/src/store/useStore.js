@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { authAPI } from '../services/api';
 
 const useStore = create(
   persist(
@@ -31,11 +32,7 @@ const useStore = create(
       },
       logout: async () => {
         try {
-          // Call logout API to revoke refresh token
-          await fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include'
-          });
+          await authAPI.logout();
         } catch (error) {
           console.error('Logout API error:', error);
         }
