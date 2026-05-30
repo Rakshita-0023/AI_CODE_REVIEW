@@ -332,10 +332,10 @@ router.get('/google/callback', async (req, res) => {
   try {
     const { code } = req.query;
     // Handle OAuth callback logic here
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3456'}/dashboard`);
   } catch (error) {
     console.error('Google OAuth callback error:', error);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/signin?error=oauth_failed`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3456'}/signin?error=oauth_failed`);
   }
 });
 

@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { authAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { getGoogleAuthStatusMessage, isGoogleAuthEnabled } from '../../utils/googleAuth';
+import { getCurrentOrigin, getGoogleAuthConfig, getGoogleAuthStatusMessage } from '../../utils/googleAuth';
 
 const GoogleOAuthButton = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const googleAuthEnabled = isGoogleAuthEnabled();
+  const googleAuth = getGoogleAuthConfig();
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
@@ -22,10 +22,15 @@ const GoogleOAuthButton = ({ onSuccess }) => {
   };
 
   const handleGoogleError = () => {
-    toast.error('Google authentication failed');
+    const origin = getCurrentOrigin();
+    toast.error(
+      origin
+        ? `Google sign-in failed. Make sure ${origin} is added to Google OAuth authorized JavaScript origins.`
+        : 'Google authentication failed'
+    );
   };
 
-  if (!googleAuthEnabled) {
+  if (!googleAuth.enabled) {
     return (
       <div className="w-full rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-left">
         <p className="text-sm font-medium text-amber-300">Google sign-in unavailable</p>
@@ -46,7 +51,7 @@ const GoogleOAuthButton = ({ onSuccess }) => {
         size="large"
         text="continue_with"
         shape="rectangular"
-        width="100%"
+        containerProps={{ style: { width: '100%' } }}
       />
     </div>
   );

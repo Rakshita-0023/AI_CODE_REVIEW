@@ -1,22 +1,40 @@
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
+const getEnvValue = (value) => (typeof value === 'string' ? value.trim() : '');
 
-export const isGoogleAuthEnabled = () => {
-  const envToggle = import.meta.env.VITE_ENABLE_GOOGLE_AUTH;
+export const getGoogleClientId = () => getEnvValue(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
-  if (envToggle === 'true') {
-    return true;
+export const getGoogleAuthConfig = () => {
+  const clientId = getGoogleClientId();
+  const envToggle = getEnvValue(import.meta.env.VITE_ENABLE_GOOGLE_AUTH);
+
+  if (!clientId) {
+    return {
+      enabled: false,
+      clientId: '',
+      reason: 'missing-client-id',
+      message: 'Google sign-in is unavailable because VITE_GOOGLE_CLIENT_ID is not configured for this build.',
+    };
   }
 
   if (envToggle === 'false') {
-    return false;
+    return {
+      enabled: false,
+      clientId,
+      reason: 'disabled-by-env',
+      message: 'Google sign-in is disabled for this build because VITE_ENABLE_GOOGLE_AUTH is set to false.',
+    };
   }
 
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  return LOCAL_HOSTS.has(window.location.hostname);
+  return {
+    enabled: true,
+    clientId,
+    reason: 'enabled',
+    message: '',
+  };
 };
 
-export const getGoogleAuthStatusMessage = () =>
-  'Google sign-in is unavailable on this deployment until this domain is added to the Google OAuth authorized JavaScript origins.';
+export const isGoogleAuthEnabled = () => getGoogleAuthConfig().enabled;
+
+export const getGoogleAuthStatusMessage = () => getGoogleAuthConfig().message;
+
+export const getCurrentOrigin = () =>
+  typeof window === 'undefined' ? '' : window.location.origin;

@@ -29,7 +29,7 @@ FRONTEND_PID=$!
 echo "✅ Services started successfully!"
 echo ""
 echo "🌐 Application URLs:"
-echo "   Frontend: http://localhost:5173"
+echo "   Frontend: http://localhost:3456"
 echo "   Backend:  http://localhost:5001"
 echo "   Health:   http://localhost:5001/health"
 echo ""

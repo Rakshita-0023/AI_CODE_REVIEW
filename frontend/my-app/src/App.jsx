@@ -21,7 +21,7 @@ import EditorPage from './pages/EditorPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 import TestPage from './components/debug/TestPage';
-import { isGoogleAuthEnabled } from './utils/googleAuth';
+import { getGoogleAuthConfig } from './utils/googleAuth';
 import './styles.css';
 
 const LandingPageWrapper = () => {
@@ -37,7 +37,7 @@ const LandingPageWrapper = () => {
 function App() {
   const { theme, login, isAuthenticated, initializeUserData } = useStore();
   const { isRestoring } = useAuthRestore(login, isAuthenticated);
-  const googleAuthEnabled = isGoogleAuthEnabled();
+  const googleAuth = getGoogleAuthConfig();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -176,8 +176,8 @@ function App() {
       </Router>
   );
 
-  return googleAuthEnabled ? (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id'}>
+  return googleAuth.enabled ? (
+    <GoogleOAuthProvider clientId={googleAuth.clientId}>
       {appRoutes}
     </GoogleOAuthProvider>
   ) : (

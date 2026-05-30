@@ -85,11 +85,13 @@ PORT=5001
 DATABASE_URL=postgresql://username:password@ep-example.us-east-1.aws.neon.tech/ai-code-reviewer?sslmode=require
 JWT_SECRET=your-super-secret-jwt-key
 GEMINI_API_KEY=your-gemini-api-key
+GOOGLE_CLIENT_ID=your-google-oauth-web-client-id
 ```
 
 **Frontend (.env)**:
 ```env
 VITE_API_URL=http://localhost:5001/api
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-web-client-id
 ```
 
 ### 3. Run Locally (Development)
@@ -107,7 +109,7 @@ cd frontend/my-app
 npm run dev
 
 # Access the application
-# Frontend: http://localhost:5173
+# Frontend: http://localhost:3456
 # Backend: http://localhost:5001
 ```
 

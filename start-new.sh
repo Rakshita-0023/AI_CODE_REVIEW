@@ -27,11 +27,10 @@ FRONTEND_PID=$!
 
 echo "✅ Servers started!"
 echo "📊 Backend: http://localhost:5001"
-echo "🎯 Frontend: http://localhost:5173"
+echo "🎯 Frontend: http://localhost:3456"
 echo "📋 Health Check: http://localhost:5001/health"
 echo ""
 echo "Press Ctrl+C to stop all servers"
 
 # Wait for background processes
 wait
-

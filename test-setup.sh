@@ -36,6 +36,5 @@ echo ""
 echo "📋 Next steps:"
 echo "1. Update .env files with your API keys"
 echo "2. Run: ./start-new.sh to start both servers"
-echo "3. Visit: http://localhost:5173 for frontend"
+echo "3. Visit: http://localhost:3456 for frontend"
 echo "4. Visit: http://localhost:5001/health for backend"
-
