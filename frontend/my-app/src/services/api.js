@@ -1,6 +1,29 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const LEGACY_PRODUCTION_API_URL = 'https://ai-code-review-lmle.onrender.com/api';
+const CURRENT_PRODUCTION_API_URL = 'https://codesenseai-backend.onrender.com/api';
+
+const resolveApiBaseUrl = () => {
+  const configuredUrl = (import.meta.env.VITE_API_URL || '').trim();
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+  if (configuredUrl && configuredUrl !== LEGACY_PRODUCTION_API_URL) {
+    return configuredUrl;
+  }
+
+  if (hostname === 'codesenseai.netlify.app') {
+    return CURRENT_PRODUCTION_API_URL;
+  }
+
+  if (isLocalHost) {
+    return 'http://localhost:5001/api';
+  }
+
+  return configuredUrl || CURRENT_PRODUCTION_API_URL;
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
