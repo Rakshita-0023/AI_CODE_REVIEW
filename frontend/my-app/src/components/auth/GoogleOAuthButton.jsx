@@ -15,7 +15,11 @@ const GoogleOAuthButton = ({ onSuccess }) => {
       onSuccess(response.data.user, response.data.accessToken);
     } catch (error) {
       console.error('Google OAuth error:', error);
-      toast.error('Google authentication failed');
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        'Google authentication failed';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

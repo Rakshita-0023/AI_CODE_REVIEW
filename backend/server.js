@@ -129,6 +129,53 @@ const extractJsonObject = (text) => {
   }
 };
 
+const getAllowedGoogleAudiences = () => {
+  const rawValues = [
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_IDS,
+  ].filter(Boolean);
+
+  const audiences = rawValues
+    .flatMap((value) => value.split(','))
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return [...new Set(audiences)];
+};
+
+const buildGoogleAuthError = (error) => {
+  const message = error?.message || 'Google authentication failed';
+
+  if (/Wrong recipient|audience/i.test(message)) {
+    return {
+      status: 401,
+      error: 'Google client ID mismatch. The frontend and backend must use the same Google OAuth web client ID.',
+    };
+  }
+
+  if (/Token used too early|Token used too late|expired/i.test(message)) {
+    return {
+      status: 401,
+      error: 'Google returned an expired or invalid sign-in token. Please try again.',
+    };
+  }
+
+  if (/No pem found|Failed to retrieve verification certificates/i.test(message)) {
+    return {
+      status: 503,
+      error: 'Google sign-in is temporarily unavailable while token verification is retrying. Please try again.',
+    };
+  }
+
+  return {
+    status: 500,
+    error: 'Google authentication failed',
+  };
+};
+
+const generateGoogleUsername = (email) =>
+  `${email.split('@')[0]}_${Math.random().toString(36).slice(2, 8)}`;
+
 const callGemini = async (prompt) => {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   if (!geminiApiKey) return null;
@@ -979,22 +1026,42 @@ app.delete('/api/scratchpads/:id', authenticateUser, async (req, res) => {
 app.post('/api/auth/google', async (req, res) => {
   try {
     const { credential } = req.body;
+    const allowedAudiences = getAllowedGoogleAudiences();
     
     if (!credential) {
       return res.status(400).json({ error: 'Google credential is required' });
     }
 
+    if (allowedAudiences.length === 0) {
+      console.error('Google OAuth error: GOOGLE_CLIENT_ID is not configured on the backend');
+      return res.status(500).json({
+        error: 'Google sign-in is not configured on the backend.',
+      });
+    }
+
     // Verify Google credential
     const { OAuth2Client } = await import('google-auth-library');
-    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const client = new OAuth2Client(allowedAudiences[0]);
     
     const ticket = await client.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: allowedAudiences,
     });
     
     const payload = ticket.getPayload();
-    const { sub: googleId, email, name, picture } = payload;
+    const { sub: googleId, email, name, picture, email_verified: emailVerified } = payload || {};
+
+    if (!email || !googleId) {
+      return res.status(400).json({
+        error: 'Google did not return the required account details for sign-in.',
+      });
+    }
+
+    if (emailVerified === false) {
+      return res.status(403).json({
+        error: 'Google account email is not verified.',
+      });
+    }
     
     // Check if user exists
     let result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
@@ -1002,10 +1069,37 @@ app.post('/api/auth/google', async (req, res) => {
     
     if (!user) {
       // Create new user from Google data
-      const username = email.split('@')[0] + '_' + Math.random().toString(36).substr(2, 4);
+      let userCreated = false;
+
+      for (let attempt = 0; attempt < 5 && !userCreated; attempt += 1) {
+        const username = generateGoogleUsername(email);
+
+        try {
+          result = await pool.query(
+            'INSERT INTO users (full_name, username, email, google_id, avatar) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [name || email.split('@')[0], username, email.toLowerCase(), googleId, picture || null]
+          );
+          user = result.rows[0];
+          userCreated = true;
+        } catch (dbError) {
+          if (dbError?.code !== '23505') {
+            throw dbError;
+          }
+        }
+      }
+
+      if (!user) {
+        throw new Error('Unable to create a unique username for Google sign-in.');
+      }
+    } else if (user.google_id !== googleId || (!user.avatar && picture) || (!user.full_name && name)) {
       result = await pool.query(
-        'INSERT INTO users (full_name, username, email, google_id, avatar) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [name, username, email.toLowerCase(), googleId, picture]
+        `UPDATE users
+         SET google_id = $1,
+             avatar = COALESCE($2, avatar),
+             full_name = COALESCE(NULLIF($3, ''), full_name)
+         WHERE id = $4
+         RETURNING *`,
+        [googleId, picture || null, name || '', user.id]
       );
       user = result.rows[0];
     }
@@ -1024,7 +1118,8 @@ app.post('/api/auth/google', async (req, res) => {
     
   } catch (error) {
     console.error('Google OAuth error:', error);
-    res.status(500).json({ error: 'Google authentication failed' });
+    const authError = buildGoogleAuthError(error);
+    res.status(authError.status).json({ error: authError.error });
   }
 });
 
